@@ -38,6 +38,9 @@
     {#if job.status === 'queued' || job.status === 'running'}
       <button class="btn-danger-text" on:click={() => dispatch('cancel', job.id)}>Cancel</button>
     {:else}
+      {#if job.status === 'success'}
+        <button class="btn-open-folder" on:click={() => dispatch('openFolder', { appId: job.appId, workshopId: job.workshopId })}>📁 Open Folder</button>
+      {/if}
       {#if job.status === 'failed'}
         <button class="btn-retry-text" on:click={() => dispatch('retry', job.id)}>🔄 Retry</button>
       {/if}
@@ -206,6 +209,15 @@
 
   .btn-retry-text:hover {
     background: rgba(16, 185, 129, 0.15);
+  }
+
+  .btn-open-folder {
+    color: #3b82f6;
+    padding: 4px 8px;
+  }
+
+  .btn-open-folder:hover {
+    background: rgba(59, 130, 246, 0.15);
   }
 
   .btn-delete-text {

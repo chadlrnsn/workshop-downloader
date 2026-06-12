@@ -26,8 +26,8 @@
 
 <style>
   :global(.console-card) {
-    height: 240px;
-    min-height: 240px;
+    flex: 1.5;
+    min-height: 120px;
     background: #090d16 !important;
   }
   :global(.console-card .card-body) {

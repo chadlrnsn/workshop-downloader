@@ -14,7 +14,8 @@
     CheckSteamCmd,
     ForceInstallSteamCmd,
     RetryJob,
-    DeleteJob
+    DeleteJob,
+    OpenFolder
   } from '../wailsjs/go/main/App';
   import { EventsOn, EventsOff } from '../wailsjs/runtime/runtime';
 
@@ -24,6 +25,7 @@
   import StatsCard from './components/StatsCard.svelte';
   import SessionCard from './components/SessionCard.svelte';
   import QueuePanel from './components/QueuePanel.svelte';
+  import HistoryModal from './components/HistoryModal.svelte';
   import ConsolePanel from './components/ConsolePanel.svelte';
   import SettingsModal from './components/SettingsModal.svelte';
   import AuthCodeModal from './components/AuthCodeModal.svelte';
@@ -32,8 +34,9 @@
   let config = { steamCmdPath: '', outputDir: '', autoUpdate: true, username: 'anonymous' };
   let jobs = [];
   
-  // Settings Modal State
+  // Settings & History Modal State
   let showConfigModal = false;
+  let showHistoryModal = false;
   let steamPassword = '';
   let isSavingSettings = false;
   let isLoggingIn = false;
@@ -218,6 +221,15 @@
     await fetchJobs();
   }
 
+  async function handleOpenFolder(event) {
+    const { appId, workshopId } = event.detail;
+    try {
+      await OpenFolder(appId, workshopId);
+    } catch (err) {
+      alert(`Ошибка открытия папки: ${err}`);
+    }
+  }
+
   async function submitCode() {
     await SubmitSteamCode(steamCode);
     showAuthModal = false;
@@ -231,7 +243,10 @@
 
 <main class="app-workspace">
   <!-- Top Bar Custom Component -->
-  <Header on:toggleSettings={() => showConfigModal = true} />
+  <Header 
+    on:toggleSettings={() => showConfigModal = true} 
+    on:toggleHistory={() => showHistoryModal = true} 
+  />
 
   <div class="workspace-body">
     <!-- Left Column: Input Forms & Stats Component Pane -->
@@ -248,6 +263,7 @@
         on:cancel={handleCancel}
         on:retry={handleRetry}
         on:delete={handleDelete}
+        on:openFolder={handleOpenFolder}
       />
       <ConsolePanel 
         {activeJobLogs} 
@@ -270,6 +286,14 @@
       on:check={handleVerifySteamCmd}
       on:login={triggerSteamLogin}
       on:close={() => { showConfigModal = false; steamPassword = ''; }}
+    />
+  {/if}
+
+  <!-- History Modal Overlay -->
+  {#if showHistoryModal}
+    <HistoryModal 
+      on:openFolder={handleOpenFolder}
+      on:close={() => showHistoryModal = false}
     />
   {/if}
 

@@ -38,6 +38,17 @@ type SteamAccount struct {
 	Remember bool   `json:"remember"`
 }
 
+type HistoryItem struct {
+	ID           string    `json:"id"`
+	WorkshopID   string    `json:"workshopId"`
+	AppID        string    `json:"appId"`
+	Title        string    `json:"title,omitempty"`
+	PreviewURL   string    `json:"previewUrl,omitempty"`
+	DownloadedAt time.Time `json:"downloadedAt"`
+	FolderExists bool      `json:"folderExists"`
+	Path         string    `json:"path,omitempty"`
+}
+
 type AppConfig struct {
 	SteamCmdPath string `json:"steamCmdPath"`
 	OutputDir    string `json:"outputDir"`

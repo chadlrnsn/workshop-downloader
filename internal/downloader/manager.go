@@ -26,6 +26,7 @@ type DownloadManager struct {
 	activeJobID  string
 	runner       *steamcmd.SteamCmdRunner
 	cfgManager   *config.ConfigManager
+	historyMgr   *config.HistoryManager
 	broadcaster  EventBroadcaster
 	cancelActive context.CancelFunc
 	running      bool
@@ -36,6 +37,7 @@ type DownloadManager struct {
 func NewDownloadManager(
 	runner *steamcmd.SteamCmdRunner,
 	cfgManager *config.ConfigManager,
+	historyMgr *config.HistoryManager,
 	broadcaster EventBroadcaster,
 ) *DownloadManager {
 	ctx, cancel := context.WithCancel(context.Background())
@@ -44,6 +46,7 @@ func NewDownloadManager(
 		queue:        []string{},
 		runner:       runner,
 		cfgManager:   cfgManager,
+		historyMgr:   historyMgr,
 		broadcaster:  broadcaster,
 		workerCtx:    ctx,
 		workerCancel: cancel,
@@ -270,6 +273,16 @@ func (dm *DownloadManager) processQueue() {
 			activeJob.Status = domain.StatusSuccess
 			activeJob.Progress = 100.0
 			logger.WriteLog(fmt.Sprintf("Queue: Job ID=%s COMPLETED successfully", activeJob.ID))
+
+			if dm.historyMgr != nil {
+				hErr := dm.historyMgr.AddHistoryItem(activeJob.WorkshopID, activeJob.AppID, activeJob.Title, activeJob.PreviewURL)
+				if hErr != nil {
+					logger.WriteLog(fmt.Sprintf("Queue: Failed to save job ID=%s to history: %v", activeJob.ID, hErr))
+				} else {
+					logger.WriteLog(fmt.Sprintf("Queue: Job ID=%s saved to history", activeJob.ID))
+					dm.broadcaster.Emit("history:updated", nil)
+				}
+			}
 		}
 		dm.removeFromQueue(activeJob.ID)
 		dm.activeJobID = ""

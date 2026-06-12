@@ -21,6 +21,7 @@
             on:cancel 
             on:retry 
             on:delete 
+            on:openFolder
           />
         {/each}
       </div>
@@ -31,7 +32,7 @@
 <style>
   :global(.queue-card) {
     flex: 2;
-    min-height: 200px;
+    min-height: 120px;
     overflow: hidden;
   }
   :global(.queue-card .card-body) {

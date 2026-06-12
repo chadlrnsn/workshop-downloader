@@ -24,6 +24,9 @@
   </div>
   
   <div class="header-actions">
+    <button class="btn-secondary settings-btn" on:click={() => dispatch('toggleHistory')}>
+      📜 History
+    </button>
     <button class="btn-secondary settings-btn" on:click={() => dispatch('toggleSettings')}>
       ⚙️ Settings & Auth
     </button>

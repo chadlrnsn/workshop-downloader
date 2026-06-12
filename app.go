@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"regexp"
+	goRuntime "runtime"
 	"sync"
 	"time"
 
@@ -22,6 +24,7 @@ import (
 type App struct {
 	ctx           context.Context
 	cfgManager    *config.ConfigManager
+	historyMgr    *config.HistoryManager
 	cmdRunner     *steamcmd.SteamCmdRunner
 	downManager   *downloader.DownloadManager
 	mu            sync.Mutex
@@ -40,11 +43,13 @@ func (wb *WailsBroadcaster) Emit(eventName string, data interface{}) {
 
 func NewApp() *App {
 	cfgManager := config.NewConfigManager()
+	historyMgr := config.NewHistoryManager(cfgManager)
 	cfg := cfgManager.GetConfig()
 	cmdRunner := steamcmd.NewSteamCmdRunner(cfg.SteamCmdPath)
 
 	return &App{
 		cfgManager: cfgManager,
+		historyMgr: historyMgr,
 		cmdRunner:  cmdRunner,
 	}
 }
@@ -52,7 +57,7 @@ func NewApp() *App {
 func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
 	broadcaster := &WailsBroadcaster{ctx: ctx}
-	a.downManager = downloader.NewDownloadManager(a.cmdRunner, a.cfgManager, broadcaster)
+	a.downManager = downloader.NewDownloadManager(a.cmdRunner, a.cfgManager, a.historyMgr, broadcaster)
 	a.downManager.Start()
 
 	// Listen for Steam Guard prompts
@@ -237,6 +242,36 @@ func (a *App) RetryJob(jobID string) error {
 
 func (a *App) DeleteJob(jobID string) {
 	a.downManager.DeleteJob(jobID)
+}
+
+func (a *App) GetHistory() ([]domain.HistoryItem, error) {
+	return a.historyMgr.LoadHistory()
+}
+
+func (a *App) DeleteHistoryItem(id string) error {
+	return a.historyMgr.DeleteHistoryItem(id)
+}
+
+func (a *App) OpenFolder(appID, workshopID string) error {
+	cfg := a.cfgManager.GetConfig()
+	dirPath := filepath.Clean(filepath.Join(cfg.OutputDir, appID, workshopID))
+
+	if _, err := os.Stat(dirPath); os.IsNotExist(err) {
+		logger.WriteLog(fmt.Sprintf("OpenFolder: directory does not exist: %s", dirPath))
+		return fmt.Errorf("directory does not exist: %s", dirPath)
+	}
+
+	logger.WriteLog(fmt.Sprintf("OpenFolder: opening directory: %s", dirPath))
+	var cmd *exec.Cmd
+	switch goRuntime.GOOS {
+	case "windows":
+		cmd = exec.Command("explorer", dirPath)
+	case "darwin":
+		cmd = exec.Command("open", dirPath)
+	default: // linux, freebsd, etc.
+		cmd = exec.Command("xdg-open", dirPath)
+	}
+	return cmd.Start()
 }
 
 func (a *App) SubmitSteamCode(code string) error {

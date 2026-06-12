@@ -18,6 +18,10 @@ export function CheckSteamCmd() {
   return window['go']['main']['App']['CheckSteamCmd']();
 }
 
+export function DeleteHistoryItem(arg1) {
+  return window['go']['main']['App']['DeleteHistoryItem'](arg1);
+}
+
 export function DeleteJob(arg1) {
   return window['go']['main']['App']['DeleteJob'](arg1);
 }
@@ -30,12 +34,20 @@ export function GetConfig() {
   return window['go']['main']['App']['GetConfig']();
 }
 
+export function GetHistory() {
+  return window['go']['main']['App']['GetHistory']();
+}
+
 export function GetJobs() {
   return window['go']['main']['App']['GetJobs']();
 }
 
 export function LoginSteam(arg1, arg2) {
   return window['go']['main']['App']['LoginSteam'](arg1, arg2);
+}
+
+export function OpenFolder(arg1, arg2) {
+  return window['go']['main']['App']['OpenFolder'](arg1, arg2);
 }
 
 export function RetryJob(arg1) {
