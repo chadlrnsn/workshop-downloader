@@ -8,7 +8,7 @@
   "frontend:dev:watcher": "npm run dev",
   "frontend:dev:serverUrl": "http://localhost:5173",
   "author": {
-    "name": "admin",
-    "email": "admin@example.com"
+    "name": "chadlrnsn",
+    "email": "chadlrnsn@gmail.com"
   }
 }

@@ -25,6 +25,8 @@ func main() {
 		Title:            "Steam Workshop Downloader",
 		Width:            1024,
 		Height:           768,
+		MinWidth:         600,
+		MinHeight:        400,
 		Frameless:        true,
 		AssetServer: &assetserver.Options{
 			Assets: assets,
