@@ -308,7 +308,7 @@
   .workspace-body {
     display: flex;
     flex: 1;
-    height: calc(100vh - 54px);
+    height: calc(100vh - 40px);
     overflow: hidden;
   }
 

@@ -22,9 +22,10 @@ func main() {
 
 	// Configure and run Wails application
 	err := wails.Run(&options.App{
-		Title:  "Steam Workshop Downloader",
-		Width:  1024,
-		Height: 768,
+		Title:            "Steam Workshop Downloader",
+		Width:            1024,
+		Height:           768,
+		Frameless:        true,
 		AssetServer: &assetserver.Options{
 			Assets: assets,
 		},
