@@ -1,6 +1,7 @@
 <script>
   import { createEventDispatcher } from 'svelte';
   import { WindowMinimise, WindowToggleMaximise, Quit } from '../../wailsjs/runtime/runtime';
+  import { _, locale } from 'svelte-i18n';
 
   const dispatch = createEventDispatcher();
 
@@ -15,30 +16,37 @@
   function close() {
     Quit();
   }
+
+  function toggleLocale() {
+    locale.set($locale === 'ru' ? 'en' : 'ru');
+  }
 </script>
 
 <header class="top-nav">
   <div class="brand">
     <span class="pulse-icon"></span>
-    <span class="brand-title">SteamCMD Workshop Downloader</span>
+    <span class="brand-title">{$_('header.title')}</span>
   </div>
   
   <div class="header-actions">
+    <button class="btn-secondary settings-btn" on:click={toggleLocale}>
+      🌐 {$locale === 'ru' ? 'EN' : 'RU'}
+    </button>
     <button class="btn-secondary settings-btn" on:click={() => dispatch('toggleHistory')}>
-      📜 History
+      📜 {$_('header.history')}
     </button>
     <button class="btn-secondary settings-btn" on:click={() => dispatch('toggleSettings')}>
-      ⚙️ Settings & Auth
+      ⚙️ {$_('header.settings')}
     </button>
     
     <div class="window-controls">
-      <button class="win-btn" on:click={minimize} title="Minimize">
+      <button class="win-btn" on:click={minimize} title={$_('header.minimize')}>
         <svg viewBox="0 0 10 10"><path d="M0 5h10v1H0z" fill="currentColor"/></svg>
       </button>
-      <button class="win-btn" on:click={toggleMaximize} title="Maximize">
+      <button class="win-btn" on:click={toggleMaximize} title={$_('header.maximize')}>
         <svg viewBox="0 0 10 10"><path d="M0 0v10h10V0H0zm1 1h8v8H1V1z" fill="currentColor"/></svg>
       </button>
-      <button class="win-btn close" on:click={close} title="Close">
+      <button class="win-btn close" on:click={close} title={$_('header.close')}>
         <svg viewBox="0 0 10 10"><path d="M0 0l10 10M10 0L0 10" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>
       </button>
     </div>

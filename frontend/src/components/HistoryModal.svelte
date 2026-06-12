@@ -4,6 +4,7 @@
   import Modal from './common/Modal.svelte';
   import { GetHistory, DeleteHistoryItem } from '../../wailsjs/go/main/App';
   import { EventsOn, EventsOff } from '../../wailsjs/runtime/runtime';
+  import { _ } from 'svelte-i18n';
 
   const dispatch = createEventDispatcher();
   let historyItems = [];
@@ -44,17 +45,17 @@
   });
 </script>
 
-<Modal title="Download History" sizeClass="history-modal" on:close={handleCancel}>
+<Modal title={$_('history.title')} sizeClass="history-modal" on:close={handleCancel}>
   <div class="modal-body modal-scroll">
     {#if isLoading && historyItems.length === 0}
       <div class="empty-state">
-        <p>Loading history...</p>
+        <p>{$_('history.loading')}</p>
       </div>
     {:else}
       {#if historyItems.length === 0}
         <div class="empty-state">
-          <p>Download history is empty</p>
-          <small>Completed downloads will be displayed here.</small>
+          <p>{$_('history.empty')}</p>
+          <small>{$_('history.empty_hint')}</small>
         </div>
       {:else}
         <div class="history-list">
@@ -72,9 +73,9 @@
                       {item.title || `Workshop ID: ${item.workshopId}`}
                     </strong>
                     {#if !item.folderExists}
-                      <span class="history-status-badge deleted">Deleted</span>
+                      <span class="history-status-badge deleted">{$_('history.status.deleted')}</span>
                     {:else}
-                      <span class="history-status-badge success">Downloaded</span>
+                      <span class="history-status-badge success">{$_('history.status.downloaded')}</span>
                     {/if}
                   </div>
                   <div class="history-ids">
@@ -85,11 +86,11 @@
 
               <div class="history-actions">
                 {#if item.folderExists}
-                  <button class="btn-open-folder" on:click={() => dispatch('openFolder', { appId: item.appId, workshopId: item.workshopId })}>📁 Open Folder</button>
+                  <button class="btn-open-folder" on:click={() => dispatch('openFolder', { appId: item.appId, workshopId: item.workshopId })}>📁 {$_('history.open_folder')}</button>
                 {:else}
-                  <span class="folder-deleted-text">⚠️ Folder deleted</span>
+                  <span class="folder-deleted-text">⚠️ {$_('history.folder_deleted')}</span>
                 {/if}
-                <button class="btn-delete-text" on:click={() => handleDelete(item.id)}>🗑️ Remove</button>
+                <button class="btn-delete-text" on:click={() => handleDelete(item.id)}>🗑️ {$_('history.remove')}</button>
               </div>
             </div>
           {/each}
@@ -99,7 +100,7 @@
   </div>
 
   <div slot="footer" class="modal-footer border-top">
-    <button class="btn-secondary" on:click={handleCancel}>Close</button>
+    <button class="btn-secondary" on:click={handleCancel}>{$_('history.close')}</button>
   </div>
 </Modal>
 

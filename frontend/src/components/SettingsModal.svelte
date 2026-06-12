@@ -1,6 +1,7 @@
 <script>
   import { createEventDispatcher } from 'svelte';
   import Modal from './common/Modal.svelte';
+  import { _ } from 'svelte-i18n';
   const dispatch = createEventDispatcher();
 
   export let config;
@@ -27,18 +28,18 @@
   }
 </script>
 
-<Modal title="Settings & Steam Auth" sizeClass="settings-modal" on:close={handleCancel}>
+<Modal title={$_('settings.title')} sizeClass="settings-modal" on:close={handleCancel}>
   <div class="modal-body modal-scroll">
-    <div class="modal-section-title">📂 Paths & Configurations</div>
+    <div class="modal-section-title">📂 {$_('settings.section_paths')}</div>
     
     <div class="form-group">
-      <label for="steamPath">SteamCMD Path</label>
+      <label for="steamPath">{$_('settings.steam_path')}</label>
       <div class="input-with-button">
         <input 
           id="steamPath" 
           type="text" 
           bind:value={config.steamCmdPath} 
-          placeholder="C:\path\to\steamcmd.exe" 
+          placeholder={$_('settings.steam_path_placeholder')} 
           disabled={isLoggingIn}
         />
         <button 
@@ -47,30 +48,29 @@
           on:click={handleCheck} 
           disabled={isCheckingSteamCmd || isLoggingIn}
         >
-          {isCheckingSteamCmd ? 'Checking...' : '🔍 Check'}
+          {isCheckingSteamCmd ? $_('settings.checking') : '🔍 ' + $_('settings.check')}
         </button>
       </div>
     </div>
     
     <div class="form-group">
-      <label for="outDir">Downloads Directory</label>
+      <label for="outDir">{$_('settings.downloads_directory')}</label>
       <input 
         id="outDir" 
         type="text" 
         bind:value={config.outputDir} 
-        placeholder="C:\Downloads" 
+        placeholder={$_('settings.downloads_directory_placeholder')} 
         disabled={isLoggingIn}
       />
     </div>
 
-    <div class="modal-section-title">🔑 Steam Authentication</div>
+    <div class="modal-section-title">🔑 {$_('settings.section_auth')}</div>
     <p class="description-text">
-      Logging in caches a persistence token (Sentry) locally inside your SteamCMD environment. 
-      Once authenticated, future downloads using this account will not prompt for a password.
+      {$_('settings.auth_description')}
     </p>
 
     <div class="form-group">
-      <label for="username">Steam Account Username</label>
+      <label for="username">{$_('settings.username')}</label>
       <input 
         id="username" 
         type="text" 
@@ -78,12 +78,12 @@
         placeholder="anonymous" 
         disabled={isLoggingIn} 
       />
-      <small class="hint">Use "anonymous" to download open-access items without login.</small>
+      <small class="hint">{$_('settings.username_hint')}</small>
     </div>
 
     {#if config.username !== 'anonymous'}
       <div class="form-group">
-        <label for="password">Steam Account Password</label>
+        <label for="password">{$_('settings.password')}</label>
         <input 
           id="password" 
           type="password" 
@@ -91,7 +91,7 @@
           placeholder="••••••••" 
           disabled={isLoggingIn} 
         />
-        <small class="hint">Password is never saved. It is only sent to SteamCMD for the initial login handshake.</small>
+        <small class="hint">{$_('settings.password_hint')}</small>
       </div>
     {/if}
 
@@ -102,7 +102,7 @@
       </div>
     {:else if config.username !== 'anonymous'}
       <button class="btn-auth btn-block" on:click={handleLogin}>
-        🚀 Connect & Authenticate Account
+        🚀 {$_('settings.authenticate')}
       </button>
     {/if}
   </div>
@@ -113,14 +113,14 @@
       on:click={handleSave} 
       disabled={isLoggingIn || isSavingSettings}
     >
-      {isSavingSettings ? 'Saving...' : 'Save Paths'}
+      {isSavingSettings ? $_('settings.saving') : $_('settings.save')}
     </button>
     <button 
       class="btn-secondary" 
       on:click={handleCancel} 
       disabled={isLoggingIn}
     >
-      Cancel
+      {$_('settings.cancel')}
     </button>
   </div>
 </Modal>

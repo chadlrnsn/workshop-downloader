@@ -1,0 +1,113 @@
+{
+  "header": {
+    "title": "SteamCMD Workshop Downloader",
+    "history": "История",
+    "settings": "Настройки и Войти",
+    "minimize": "Свернуть",
+    "maximize": "Развернуть",
+    "close": "Закрыть"
+  },
+  "new_task": {
+    "title": "Новая задача скачивания",
+    "url_label": "URL или ID объекта Workshop",
+    "url_placeholder": "https://steamcommunity.com/sharedfiles/...",
+    "appid_label": "Ручной AppID (если автопоиск не сработал)",
+    "appid_placeholder": "например, 281990",
+    "submit": "Добавить в очередь"
+  },
+  "stats": {
+    "total": "Всего задач",
+    "active": "Активные",
+    "success": "Успешные"
+  },
+  "session": {
+    "title": "Аккаунт сессии",
+    "active_user": "Активный пользователь:",
+    "engine_status": "Статус движка:",
+    "ready": "Готов"
+  },
+  "queue": {
+    "title": "Очередь загрузки",
+    "items": "{count, plural, =0 {0 объектов} =1 {1 объект} one {# объект} few {# объекта} many {# объектов} other {# объекта}}",
+    "empty": "Очередь скачивания пуста",
+    "empty_hint": "Укажите ссылку на Steam Workshop выше, чтобы начать скачивание."
+  },
+  "job": {
+    "status": {
+      "queued": "в очереди",
+      "running": "выполняется",
+      "success": "успешно",
+      "failed": "ошибка"
+    },
+    "cancel": "Отмена",
+    "open_folder": "Открыть папку",
+    "retry": "Повторить",
+    "remove": "Удалить"
+  },
+  "console": {
+    "title": "Логи SteamCMD",
+    "clear": "Очистить логи",
+    "listening": "Ожидание событий консоли SteamCMD..."
+  },
+  "settings": {
+    "title": "Настройки и авторизация Steam",
+    "section_paths": "Пути и конфигурация",
+    "steam_path": "Путь к SteamCMD",
+    "steam_path_placeholder": "C:\\path\\to\\steamcmd.exe",
+    "check": "Проверить",
+    "checking": "Проверка...",
+    "downloads_directory": "Папка для скачивания",
+    "downloads_directory_placeholder": "C:\\Downloads",
+    "section_auth": "Авторизация Steam",
+    "auth_description": "При авторизации токен входа (Sentry) сохраняется локально в вашей среде SteamCMD. В дальнейшем для скачивания под этой учетной записью пароль не потребуется.",
+    "username": "Имя пользователя Steam",
+    "username_hint": "Используйте \"anonymous\" для скачивания общедоступных файлов без авторизации.",
+    "password": "Пароль Steam",
+    "password_hint": "Пароль не сохраняется. Он отправляется в SteamCMD только для первоначального рукопожатия авторизации.",
+    "authenticate": "Подключить и авторизовать аккаунт",
+    "saving": "Сохранение...",
+    "save": "Сохранить пути",
+    "cancel": "Отмена"
+  },
+  "history": {
+    "title": "История загрузок",
+    "loading": "Загрузка истории...",
+    "empty": "История загрузок пуста",
+    "empty_hint": "Здесь будут отображаться завершенные загрузки.",
+    "status": {
+      "deleted": "Удалено",
+      "downloaded": "Скачано"
+    },
+    "folder_deleted": "Папка удалена",
+    "open_folder": "Открыть папку",
+    "remove": "Удалить",
+    "close": "Закрыть"
+  },
+  "auth": {
+    "title": "Подтверждение Steam Guard",
+    "prompt": "Для входа требуется подтверждение. Пожалуйста, введите код Steam Guard, отправленный на {type}.",
+    "email": "Email (электронную почту)",
+    "2fa": "Мобильное приложение (2FA)",
+    "placeholder": "например, A1B2C",
+    "submit": "Отправить код",
+    "cancel": "Отмена"
+  },
+  "alerts": {
+    "invalid_username": "Пожалуйста, введите корректное имя пользователя Steam (отличное от anonymous) для авторизации.",
+    "auth_success": "Авторизация Steam успешно завершена! Учетные данные кэшированы в SteamCMD.",
+    "steamcmd_found": "Файл SteamCMD найден и проверен!",
+    "steamcmd_not_found": "SteamCMD не был найден по этому пути. Хотите скачать и установить его сейчас?",
+    "steamcmd_installed": "SteamCMD успешно установлен!",
+    "folder_open_error": "Ошибка открытия папки: {error}",
+    "job_submit_error": "Ошибка отправки задачи: {error}",
+    "save_config_error": "Ошибка сохранения конфигурации: {error}",
+    "login_failed": "Сбой входа Steam: {error}",
+    "install_failed": "Установка не удалась: {error}",
+    "verify_path_error": "Ошибка проверки пути: {error}",
+    "retry_failed": "Сбой повторной попытки: {error}"
+  },
+  "status": {
+    "login_init": "Запуск авторизации SteamCMD... Проверьте логи ниже.",
+    "download_install": "Скачивание и установка клиента SteamCMD... Пожалуйста, подождите."
+  }
+}

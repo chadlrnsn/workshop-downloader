@@ -1,5 +1,6 @@
 <script>
   import { createEventDispatcher } from 'svelte';
+  import { _ } from 'svelte-i18n';
   const dispatch = createEventDispatcher();
 
   export let job;
@@ -15,7 +16,7 @@
         <strong class="job-title-text" title={job.title || `Workshop ID: ${job.workshopId}`}>
           {job.title || `Workshop ID: ${job.workshopId}`}
         </strong>
-        <span class="job-status-badge">{job.status}</span>
+        <span class="job-status-badge">{$_('job.status.' + job.status)}</span>
       </div>
       <div class="job-ids">
         <span class="text-secondary">AppID: {job.appId} | ID: {job.workshopId}</span>
@@ -36,15 +37,15 @@
 
   <div class="job-actions">
     {#if job.status === 'queued' || job.status === 'running'}
-      <button class="btn-danger-text" on:click={() => dispatch('cancel', job.id)}>Cancel</button>
+      <button class="btn-danger-text" on:click={() => dispatch('cancel', job.id)}>{$_('job.cancel')}</button>
     {:else}
       {#if job.status === 'success'}
-        <button class="btn-open-folder" on:click={() => dispatch('openFolder', { appId: job.appId, workshopId: job.workshopId })}>📁 Open Folder</button>
+        <button class="btn-open-folder" on:click={() => dispatch('openFolder', { appId: job.appId, workshopId: job.workshopId })}>📁 {$_('job.open_folder')}</button>
       {/if}
       {#if job.status === 'failed'}
-        <button class="btn-retry-text" on:click={() => dispatch('retry', job.id)}>🔄 Retry</button>
+        <button class="btn-retry-text" on:click={() => dispatch('retry', job.id)}>🔄 {$_('job.retry')}</button>
       {/if}
-      <button class="btn-delete-text" on:click={() => dispatch('delete', job.id)}>🗑️ Remove</button>
+      <button class="btn-delete-text" on:click={() => dispatch('delete', job.id)}>🗑️ {$_('job.remove')}</button>
     {/if}
   </div>
 </div>

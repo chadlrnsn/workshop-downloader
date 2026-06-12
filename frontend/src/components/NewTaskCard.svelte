@@ -1,6 +1,7 @@
 <script>
   import { createEventDispatcher } from 'svelte';
   import Card from './common/Card.svelte';
+  import { _ } from 'svelte-i18n';
   const dispatch = createEventDispatcher();
 
   let workshopUrl = '';
@@ -13,30 +14,30 @@
   }
 </script>
 
-<Card title="New Download Task">
+<Card title={$_('new_task.title')}>
   <form on:submit|preventDefault={handleFormSubmit} class="download-form">
     <div class="form-group">
-      <label for="urlInput">Workshop Item URL or ID</label>
+      <label for="urlInput">{$_('new_task.url_label')}</label>
       <input 
         id="urlInput" 
         type="text" 
-        placeholder="https://steamcommunity.com/sharedfiles/..." 
+        placeholder={$_('new_task.url_placeholder')} 
         bind:value={workshopUrl} 
         required 
       />
     </div>
     
     <div class="form-group">
-      <label for="appIdInput">Manual AppID (if query appid failed)</label>
+      <label for="appIdInput">{$_('new_task.appid_label')}</label>
       <input 
         id="appIdInput" 
         type="text" 
-        placeholder="e.g. 281990" 
+        placeholder={$_('new_task.appid_placeholder')} 
         bind:value={manualAppId} 
       />
     </div>
 
-    <button type="submit" class="btn-primary btn-block">Add to Queue</button>
+    <button type="submit" class="btn-primary btn-block">{$_('new_task.submit')}</button>
   </form>
 </Card>
 

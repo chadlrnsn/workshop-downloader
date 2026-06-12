@@ -1,5 +1,6 @@
 <script>
   import Card from './common/Card.svelte';
+  import { _ } from 'svelte-i18n';
   export let jobs = [];
 </script>
 
@@ -7,15 +8,15 @@
   <div class="status-summary">
     <div class="stat-item">
       <span class="stat-val">{(jobs || []).length}</span>
-      <span class="stat-lbl">Total Tasks</span>
+      <span class="stat-lbl">{$_('stats.total')}</span>
     </div>
     <div class="stat-item">
       <span class="stat-val">{(jobs || []).filter(j => j && j.status === 'running').length}</span>
-      <span class="stat-lbl">Active</span>
+      <span class="stat-lbl">{$_('stats.active')}</span>
     </div>
     <div class="stat-item">
       <span class="stat-val">{(jobs || []).filter(j => j && j.status === 'success').length}</span>
-      <span class="stat-lbl">Success</span>
+      <span class="stat-lbl">{$_('stats.success')}</span>
     </div>
   </div>
 </Card>

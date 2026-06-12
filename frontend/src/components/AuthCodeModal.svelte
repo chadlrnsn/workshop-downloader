@@ -1,6 +1,7 @@
 <script>
   import { createEventDispatcher } from 'svelte';
   import Modal from './common/Modal.svelte';
+  import { _ } from 'svelte-i18n';
   const dispatch = createEventDispatcher();
 
   export let authPromptType = '';
@@ -15,24 +16,23 @@
   }
 </script>
 
-<Modal title="Steam Guard Verification" sizeClass="auth-code-modal" zHigh={true} on:close={handleCancel}>
+<Modal title={$_('auth.title')} sizeClass="auth-code-modal" zHigh={true} on:close={handleCancel}>
   <div class="modal-body">
     <p>
-      Your account requires approval. Please supply the Steam Guard code received via 
-      <strong>{authPromptType === 'email' ? 'Email Address' : 'Mobile App (2FA)'}</strong>.
+      {$_('auth.prompt', { values: { type: authPromptType === 'email' ? $_('auth.email') : $_('auth.2fa') } })}
     </p>
     <input 
       type="text" 
       bind:value={steamCode} 
-      placeholder="e.g. A1B2C" 
+      placeholder={$_('auth.placeholder')} 
       class="input-code" 
       autofocus 
     />
   </div>
   
   <div slot="footer" class="modal-footer">
-    <button class="btn-primary" on:click={handleSubmit}>Submit Code</button>
-    <button class="btn-secondary" on:click={handleCancel}>Cancel</button>
+    <button class="btn-primary" on:click={handleSubmit}>{$_('auth.submit')}</button>
+    <button class="btn-secondary" on:click={handleCancel}>{$_('auth.cancel')}</button>
   </div>
 </Modal>
 

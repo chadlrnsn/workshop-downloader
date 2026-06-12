@@ -1,5 +1,6 @@
 <script>
   import { onMount } from 'svelte';
+  import { _ } from 'svelte-i18n';
   
   // Wails-generated JS bindings
   import { 
@@ -125,7 +126,7 @@
       await SaveConfig(config);
       showConfigModal = false;
     } catch (err) {
-      alert(`Error saving config: ${err}`);
+      alert($_('alerts.save_config_error', { values: { error: err } }));
     } finally {
       isSavingSettings = false;
     }
@@ -133,19 +134,19 @@
 
   async function triggerSteamLogin() {
     if (!config.username || config.username === 'anonymous') {
-      alert('Please enter a valid Steam Username (different from anonymous) to authenticate.');
+      alert($_('alerts.invalid_username'));
       return;
     }
     isLoggingIn = true;
-    loginStatusMsg = 'Initiating SteamCMD login... Check logs below.';
+    loginStatusMsg = $_('status.login_init');
     try {
       await LoginSteam(config.username, steamPassword);
       loginStatusMsg = '';
       steamPassword = '';
-      alert('Steam authentication completed successfully! Credentials cached in SteamCMD.');
+      alert($_('alerts.auth_success'));
     } catch (err) {
       loginStatusMsg = '';
-      alert(`Steam login failed: ${err}`);
+      alert($_('alerts.login_failed', { values: { error: err } }));
     } finally {
       isLoggingIn = false;
       await reloadConfig();
@@ -157,24 +158,24 @@
     try {
       const status = await CheckSteamCmd();
       if (status === 'found') {
-        alert('SteamCMD executable found and verified!');
+        alert($_('alerts.steamcmd_found'));
       } else {
-        const fetchNow = confirm('SteamCMD was not found at this location. Would you like to download and install it now?');
+        const fetchNow = confirm($_('alerts.steamcmd_not_found'));
         if (fetchNow) {
           isLoggingIn = true;
-          loginStatusMsg = 'Downloading and installing SteamCMD Client... Please wait.';
+          loginStatusMsg = $_('status.download_install');
           try {
             await ForceInstallSteamCmd();
-            alert('SteamCMD installed successfully!');
+            alert($_('alerts.steamcmd_installed'));
           } catch (installErr) {
-            alert(`Installation failed: ${installErr}`);
+            alert($_('alerts.install_failed', { values: { error: installErr } }));
           } finally {
             isLoggingIn = false;
           }
         }
       }
     } catch (err) {
-      alert(`Error verifying path: ${err}`);
+      alert($_('alerts.verify_path_error', { values: { error: err } }));
     } finally {
       isCheckingSteamCmd = false;
     }
@@ -195,7 +196,7 @@
       await AddDownload(workshopUrl, manualAppId);
       await fetchJobs();
     } catch (err) {
-      alert(`Error submitting job: ${err}`);
+      alert($_('alerts.job_submit_error', { values: { error: err } }));
     }
   }
 
@@ -211,7 +212,7 @@
       await RetryJob(jobId);
       await fetchJobs();
     } catch (err) {
-      alert(`Retry failed: ${err}`);
+      alert($_('alerts.retry_failed', { values: { error: err } }));
     }
   }
 
@@ -226,7 +227,7 @@
     try {
       await OpenFolder(appId, workshopId);
     } catch (err) {
-      alert(`Ошибка открытия папки: ${err}`);
+      alert($_('alerts.folder_open_error', { values: { error: err } }));
     }
   }
 

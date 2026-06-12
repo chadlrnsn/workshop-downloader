@@ -1,17 +1,18 @@
 <script>
   import Card from './common/Card.svelte';
   import JobCard from './JobCard.svelte';
+  import { _ } from 'svelte-i18n';
   export let jobs = [];
 </script>
 
-<Card title="Download Queue" customClass="queue-card">
-  <span slot="header-right" class="badge">{(jobs || []).length} items</span>
+<Card title={$_('queue.title')} customClass="queue-card">
+  <span slot="header-right" class="badge">{$_('queue.items', { values: { count: (jobs || []).length } })}</span>
   
   <div class="scrollable-content">
     {#if !(jobs && jobs.length)}
       <div class="empty-state">
-        <p>Download queue is empty</p>
-        <small>Submit a Steam Workshop URL above to begin downloading.</small>
+        <p>{$_('queue.empty')}</p>
+        <small>{$_('queue.empty_hint')}</small>
       </div>
     {:else}
       <div class="queue-list">

@@ -1,18 +1,19 @@
 <script>
   import { createEventDispatcher } from 'svelte';
   import Card from './common/Card.svelte';
+  import { _ } from 'svelte-i18n';
   const dispatch = createEventDispatcher();
 
   export let activeJobLogs = [];
   export let logContainer;
 </script>
 
-<Card title="SteamCMD Live Logs" customClass="console-card">
-  <button slot="header-right" class="btn-icon-text" on:click={() => dispatch('clear')}>🗑️ Clear Logs</button>
+<Card title={$_('console.title')} customClass="console-card">
+  <button slot="header-right" class="btn-icon-text" on:click={() => dispatch('clear')}>🗑️ {$_('console.clear')}</button>
   
   <div class="console-body" bind:this={logContainer}>
     {#if (activeJobLogs || []).length === 0}
-      <div class="console-placeholder">Listening for SteamCMD console events...</div>
+      <div class="console-placeholder">{$_('console.listening')}</div>
     {:else}
       {#each activeJobLogs || [] as log (log.id)}
         <div class="line" class:error-line={log.isError}>

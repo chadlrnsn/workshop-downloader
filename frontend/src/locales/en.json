@@ -1,0 +1,113 @@
+{
+  "header": {
+    "title": "SteamCMD Workshop Downloader",
+    "history": "History",
+    "settings": "Settings & Auth",
+    "minimize": "Minimize",
+    "maximize": "Maximize",
+    "close": "Close"
+  },
+  "new_task": {
+    "title": "New Download Task",
+    "url_label": "Workshop Item URL or ID",
+    "url_placeholder": "https://steamcommunity.com/sharedfiles/...",
+    "appid_label": "Manual AppID (if query appid failed)",
+    "appid_placeholder": "e.g. 281990",
+    "submit": "Add to Queue"
+  },
+  "stats": {
+    "total": "Total Tasks",
+    "active": "Active",
+    "success": "Success"
+  },
+  "session": {
+    "title": "Session Account",
+    "active_user": "Active User:",
+    "engine_status": "Engine Status:",
+    "ready": "Ready"
+  },
+  "queue": {
+    "title": "Download Queue",
+    "items": "{count, plural, =0 {0 items} =1 {1 item} other {# items}}",
+    "empty": "Download queue is empty",
+    "empty_hint": "Submit a Steam Workshop URL above to begin downloading."
+  },
+  "job": {
+    "status": {
+      "queued": "queued",
+      "running": "running",
+      "success": "success",
+      "failed": "failed"
+    },
+    "cancel": "Cancel",
+    "open_folder": "Open Folder",
+    "retry": "Retry",
+    "remove": "Remove"
+  },
+  "console": {
+    "title": "SteamCMD Live Logs",
+    "clear": "Clear Logs",
+    "listening": "Listening for SteamCMD console events..."
+  },
+  "settings": {
+    "title": "Settings & Steam Auth",
+    "section_paths": "Paths & Configurations",
+    "steam_path": "SteamCMD Path",
+    "steam_path_placeholder": "C:\\path\\to\\steamcmd.exe",
+    "check": "Check",
+    "checking": "Checking...",
+    "downloads_directory": "Downloads Directory",
+    "downloads_directory_placeholder": "C:\\Downloads",
+    "section_auth": "Steam Authentication",
+    "auth_description": "Logging in caches a persistence token (Sentry) locally inside your SteamCMD environment. Once authenticated, future downloads using this account will not prompt for a password.",
+    "username": "Steam Account Username",
+    "username_hint": "Use \"anonymous\" to download open-access items without login.",
+    "password": "Steam Account Password",
+    "password_hint": "Password is never saved. It is only sent to SteamCMD for the initial login handshake.",
+    "authenticate": "Connect & Authenticate Account",
+    "saving": "Saving...",
+    "save": "Save Paths",
+    "cancel": "Cancel"
+  },
+  "history": {
+    "title": "Download History",
+    "loading": "Loading history...",
+    "empty": "Download history is empty",
+    "empty_hint": "Completed downloads will be displayed here.",
+    "status": {
+      "deleted": "Deleted",
+      "downloaded": "Downloaded"
+    },
+    "folder_deleted": "Folder deleted",
+    "open_folder": "Open Folder",
+    "remove": "Remove",
+    "close": "Close"
+  },
+  "auth": {
+    "title": "Steam Guard Verification",
+    "prompt": "Your account requires approval. Please supply the Steam Guard code received via {type}.",
+    "email": "Email Address",
+    "2fa": "Mobile App (2FA)",
+    "placeholder": "e.g. A1B2C",
+    "submit": "Submit Code",
+    "cancel": "Cancel"
+  },
+  "alerts": {
+    "invalid_username": "Please enter a valid Steam Username (different from anonymous) to authenticate.",
+    "auth_success": "Steam authentication completed successfully! Credentials cached in SteamCMD.",
+    "steamcmd_found": "SteamCMD executable found and verified!",
+    "steamcmd_not_found": "SteamCMD was not found at this location. Would you like to download and install it now?",
+    "steamcmd_installed": "SteamCMD installed successfully!",
+    "folder_open_error": "Error opening folder: {error}",
+    "job_submit_error": "Error submitting job: {error}",
+    "save_config_error": "Error saving config: {error}",
+    "login_failed": "Steam login failed: {error}",
+    "install_failed": "Installation failed: {error}",
+    "verify_path_error": "Error verifying path: {error}",
+    "retry_failed": "Retry failed: {error}"
+  },
+  "status": {
+    "login_init": "Initiating SteamCMD login... Check logs below.",
+    "download_install": "Downloading and installing SteamCMD Client... Please wait."
+  }
+}

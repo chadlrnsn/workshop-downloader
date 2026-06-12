@@ -1,17 +1,18 @@
 <script>
   import Card from './common/Card.svelte';
+  import { _ } from 'svelte-i18n';
   export let username = 'anonymous';
 </script>
 
-<Card title="Session Account" customClass="details-card">
+<Card title={$_('session.title')} customClass="details-card">
   <div class="session-info">
     <div class="session-row">
-      <span class="lbl font-semibold">Active User:</span>
+      <span class="lbl font-semibold">{$_('session.active_user')}</span>
       <span class="val highlight-text">{username}</span>
     </div>
     <div class="session-row">
-      <span class="lbl">Engine Status:</span>
-      <span class="val text-green">Ready</span>
+      <span class="lbl">{$_('session.engine_status')}</span>
+      <span class="val text-green">{$_('session.ready')}</span>
     </div>
   </div>
 </Card>
