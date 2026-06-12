@@ -22,6 +22,8 @@ export namespace domain {
 	    id: string;
 	    workshopId: string;
 	    appId: string;
+	    title?: string;
+	    previewUrl?: string;
 	    status: string;
 	    progress: number;
 	    errorMsg?: string;
@@ -41,6 +43,8 @@ export namespace domain {
 	        this.id = source["id"];
 	        this.workshopId = source["workshopId"];
 	        this.appId = source["appId"];
+	        this.title = source["title"];
+	        this.previewUrl = source["previewUrl"];
 	        this.status = source["status"];
 	        this.progress = source["progress"];
 	        this.errorMsg = source["errorMsg"];

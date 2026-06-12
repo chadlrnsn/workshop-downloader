@@ -10,6 +10,8 @@ export function CancelSteamCodePrompt():Promise<void>;
 
 export function CheckSteamCmd():Promise<string>;
 
+export function DeleteJob(arg1:string):Promise<void>;
+
 export function ForceInstallSteamCmd():Promise<void>;
 
 export function GetConfig():Promise<domain.AppConfig>;
@@ -17,6 +19,8 @@ export function GetConfig():Promise<domain.AppConfig>;
 export function GetJobs():Promise<Array<domain.DownloadJob>>;
 
 export function LoginSteam(arg1:string,arg2:string):Promise<void>;
+
+export function RetryJob(arg1:string):Promise<void>;
 
 export function SaveConfig(arg1:domain.AppConfig):Promise<void>;
 

@@ -16,6 +16,8 @@ type DownloadJob struct {
 	ID         string     `json:"id"`
 	WorkshopID string     `json:"workshopId"`
 	AppID      string     `json:"appId"`
+	Title      string     `json:"title,omitempty"`
+	PreviewURL string     `json:"previewUrl,omitempty"`
 	Status     JobStatus  `json:"status"`
 	Progress   float64    `json:"progress"` // 0.0 to 100.0
 	ErrorMsg   string     `json:"errorMsg,omitempty"`

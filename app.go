@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+	"path/filepath"
 	"regexp"
 	"sync"
 	"time"
@@ -12,6 +13,7 @@ import (
 	"workshop-downloader/internal/config"
 	"workshop-downloader/internal/domain"
 	"workshop-downloader/internal/downloader"
+	"workshop-downloader/internal/logger"
 	"workshop-downloader/internal/steamcmd"
 
 	"github.com/wailsapp/wails/v2/pkg/runtime"
@@ -121,6 +123,19 @@ func (a *App) GetConfig() domain.AppConfig {
 }
 
 func (a *App) SaveConfig(cfg domain.AppConfig) error {
+	// Validate OutputDir write access
+	if err := os.MkdirAll(cfg.OutputDir, 0755); err != nil {
+		logger.WriteError(err, "SaveConfig: OutputDir validation")
+		return fmt.Errorf("invalid downloads directory: cannot create or write to path: %w", err)
+	}
+
+	// Validate SteamCMD directory write access
+	steamCmdDir := filepath.Dir(cfg.SteamCmdPath)
+	if err := os.MkdirAll(steamCmdDir, 0755); err != nil {
+		logger.WriteError(err, "SaveConfig: SteamCMD dir validation")
+		return fmt.Errorf("invalid steamcmd directory: cannot create or write to path: %w", err)
+	}
+
 	// Verify if the path changed and SteamCMD does not exist at new path
 	oldCfg := a.cfgManager.GetConfig()
 	if oldCfg.SteamCmdPath != cfg.SteamCmdPath {
@@ -174,18 +189,37 @@ func (a *App) ForceInstallSteamCmd() error {
 func (a *App) AddDownload(workshopURL string, manualAppID string) (string, error) {
 	workshopID, err := extractWorkshopID(workshopURL)
 	if err != nil {
+		logger.WriteLog(fmt.Sprintf("Wails Bindings: AddDownload error: invalid workshop URL/ID: %s", workshopURL))
 		return "", err
 	}
 
+	// 1. Resolve metadata from Steam WebAPI
+	var title, previewURL string
 	appID := manualAppID
+
+	logger.WriteLog(fmt.Sprintf("Wails Bindings: Fetching Steam WebAPI metadata for ID=%s...", workshopID))
+	meta, metaErr := steamcmd.FetchWorkshopMetadata(workshopID)
+	if metaErr == nil && meta != nil {
+		title = meta.Title
+		previewURL = meta.PreviewURL
+		// Auto-populate AppID if not manual
+		if appID == "" && meta.ConsumerAppID != 0 {
+			appID = fmt.Sprintf("%d", meta.ConsumerAppID)
+		}
+	} else {
+		logger.WriteLog(fmt.Sprintf("Wails Bindings: Failed to fetch metadata: %v. Proceeding with fallback.", metaErr))
+	}
+
 	if appID == "" {
 		appID = extractAppIDFromURL(workshopURL)
 		if appID == "" {
+			logger.WriteLog(fmt.Sprintf("Wails Bindings: AddDownload error: no AppID resolved for workshop item: %s", workshopID))
 			return "", fmt.Errorf("could not determine AppID. Please specify manually")
 		}
 	}
 
-	jobID := a.downManager.AddJob(workshopID, appID)
+	logger.WriteLog(fmt.Sprintf("Wails Bindings: AddDownload resolved WorkshopID=%s, AppID=%s, Title=%s", workshopID, appID, title))
+	jobID := a.downManager.AddJobWithMeta(workshopID, appID, title, previewURL)
 	return jobID, nil
 }
 
@@ -195,6 +229,14 @@ func (a *App) GetJobs() []domain.DownloadJob {
 
 func (a *App) CancelJob(jobID string) {
 	a.downManager.CancelJob(jobID)
+}
+
+func (a *App) RetryJob(jobID string) error {
+	return a.downManager.RetryJob(jobID)
+}
+
+func (a *App) DeleteJob(jobID string) {
+	a.downManager.DeleteJob(jobID)
 }
 
 func (a *App) SubmitSteamCode(code string) error {
@@ -233,9 +275,11 @@ func (a *App) CancelSteamCodePrompt() error {
 
 // LoginSteam executes direct SteamCMD login to authenticate account and resolve 2FA
 func (a *App) LoginSteam(username, password string) error {
+	logger.WriteLog(fmt.Sprintf("Wails Bindings: LoginSteam called for Username=%s", username))
 	cfg := a.cfgManager.GetConfig()
 	cfg.Username = username
 	if err := a.cfgManager.UpdateConfig(cfg); err != nil {
+		logger.WriteError(err, "LoginSteam: SaveConfig")
 		return fmt.Errorf("failed to save login configuration: %w", err)
 	}
 
@@ -245,6 +289,7 @@ func (a *App) LoginSteam(username, password string) error {
 
 	// Verify or install SteamCMD dynamically
 	if err := steamcmd.VerifyOrInstall(a.ctx, cfg.SteamCmdPath, logFn); err != nil {
+		logger.WriteError(err, "LoginSteam: VerifyOrInstall")
 		return fmt.Errorf("steamcmd verification/run failed: %w", err)
 	}
 
@@ -253,9 +298,11 @@ func (a *App) LoginSteam(username, password string) error {
 
 	err := a.cmdRunner.Login(ctx, username, password, logFn)
 	if err != nil {
+		logger.WriteError(err, "LoginSteam: cmdRunner.Login")
 		return fmt.Errorf("steamcmd login failed: %w", err)
 	}
 
+	logger.WriteLog("Wails Bindings: SteamCMD login connection successful.")
 	return nil
 }
 

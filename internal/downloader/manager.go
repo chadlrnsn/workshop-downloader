@@ -3,11 +3,15 @@ package downloader
 import (
 	"context"
 	"fmt"
+	"io"
+	"os"
+	"path/filepath"
 	"sync"
 	"time"
 
 	"workshop-downloader/internal/config"
 	"workshop-downloader/internal/domain"
+	"workshop-downloader/internal/logger"
 	"workshop-downloader/internal/steamcmd"
 )
 
@@ -74,6 +78,10 @@ func (dm *DownloadManager) Stop() {
 }
 
 func (dm *DownloadManager) AddJob(workshopID, appID string) string {
+	return dm.AddJobWithMeta(workshopID, appID, "", "")
+}
+
+func (dm *DownloadManager) AddJobWithMeta(workshopID, appID, title, previewURL string) string {
 	dm.mu.Lock()
 	defer dm.mu.Unlock()
 
@@ -82,6 +90,8 @@ func (dm *DownloadManager) AddJob(workshopID, appID string) string {
 		ID:         jobID,
 		WorkshopID: workshopID,
 		AppID:      appID,
+		Title:      title,
+		PreviewURL: previewURL,
 		Status:     domain.StatusQueued,
 		Progress:   0,
 		CreatedAt:  time.Now(),
@@ -90,6 +100,7 @@ func (dm *DownloadManager) AddJob(workshopID, appID string) string {
 	dm.jobs[jobID] = job
 	dm.queue = append(dm.queue, jobID)
 
+	logger.WriteLog(fmt.Sprintf("Queue: Added new download job ID=%s, WorkshopID=%s, AppID=%s, Title=%s", jobID, workshopID, appID, title))
 	dm.broadcastJobChange(job)
 	return jobID
 }
@@ -98,14 +109,12 @@ func (dm *DownloadManager) GetJobs() []domain.DownloadJob {
 	dm.mu.RLock()
 	defer dm.mu.RUnlock()
 
-	// Return jobs in order of creation/queue
 	allJobs := []domain.DownloadJob{}
 	for _, id := range dm.queue {
 		if j, ok := dm.jobs[id]; ok {
 			allJobs = append(allJobs, *j)
 		}
 	}
-	// Add historical jobs that are not in queue if any
 	for _, j := range dm.jobs {
 		found := false
 		for _, qid := range dm.queue {
@@ -129,6 +138,7 @@ func (dm *DownloadManager) CancelJob(jobID string) {
 		return
 	}
 
+	logger.WriteLog(fmt.Sprintf("Queue: Job cancellation requested ID=%s, CurrentStatus=%s", jobID, job.Status))
 	if job.Status == domain.StatusRunning {
 		if dm.cancelActive != nil {
 			dm.cancelActive()
@@ -143,6 +153,69 @@ func (dm *DownloadManager) CancelJob(jobID string) {
 	dm.mu.Unlock()
 }
 
+func (dm *DownloadManager) RetryJob(jobID string) error {
+	dm.mu.Lock()
+	job, exists := dm.jobs[jobID]
+	if !exists {
+		dm.mu.Unlock()
+		return fmt.Errorf("job not found")
+	}
+
+	if job.Status == domain.StatusRunning || job.Status == domain.StatusQueued {
+		dm.mu.Unlock()
+		return fmt.Errorf("job is already active or in queue")
+	}
+
+	// Reset job fields
+	job.Status = domain.StatusQueued
+	job.Progress = 0
+	job.ErrorMsg = ""
+	now := time.Now()
+	job.CreatedAt = now
+	job.StartedAt = nil
+	job.FinishedAt = nil
+
+	// Append back to queue list if not present
+	found := false
+	for _, id := range dm.queue {
+		if id == jobID {
+			found = true
+			break
+		}
+	}
+	if !found {
+		dm.queue = append(dm.queue, jobID)
+	}
+
+	logger.WriteLog(fmt.Sprintf("Queue: Retrying job ID=%s, WorkshopID=%s, AppID=%s", jobID, job.WorkshopID, job.AppID))
+	dm.broadcastJobChange(job)
+	dm.mu.Unlock()
+	return nil
+}
+
+func (dm *DownloadManager) DeleteJob(jobID string) {
+	dm.mu.Lock()
+	job, exists := dm.jobs[jobID]
+	if !exists {
+		dm.mu.Unlock()
+		return
+	}
+
+	logger.WriteLog(fmt.Sprintf("Queue: Deleting job ID=%s", jobID))
+
+	if job.Status == domain.StatusRunning {
+		if dm.cancelActive != nil {
+			dm.cancelActive()
+		}
+	}
+
+	dm.removeFromQueue(jobID)
+	delete(dm.jobs, jobID)
+	dm.mu.Unlock()
+
+	dm.broadcaster.Emit("job:deleted", jobID)
+}
+
 func (dm *DownloadManager) processQueue() {
 	for {
 		select {
@@ -154,7 +227,6 @@ func (dm *DownloadManager) processQueue() {
 		var activeJob *domain.DownloadJob
 		dm.mu.Lock()
 		if len(dm.queue) > 0 {
-			// Find first queued job
 			var nextJobIdx = -1
 			for i, id := range dm.queue {
 				if dm.jobs[id].Status == domain.StatusQueued {
@@ -170,6 +242,7 @@ func (dm *DownloadManager) processQueue() {
 				activeJob.Status = domain.StatusRunning
 				now := time.Now()
 				activeJob.StartedAt = &now
+				logger.WriteLog(fmt.Sprintf("Queue: Processing active job ID=%s, WorkshopID=%s, AppID=%s", id, activeJob.WorkshopID, activeJob.AppID))
 				dm.broadcastJobChange(activeJob)
 			}
 		}
@@ -180,7 +253,6 @@ func (dm *DownloadManager) processQueue() {
 			continue
 		}
 
-		// Execute job
 		err := dm.runJob(activeJob)
 
 		dm.mu.Lock()
@@ -190,10 +262,14 @@ func (dm *DownloadManager) processQueue() {
 			if activeJob.Status != domain.StatusCancelled {
 				activeJob.Status = domain.StatusFailed
 				activeJob.ErrorMsg = err.Error()
+				logger.WriteLog(fmt.Sprintf("Queue: Job ID=%s FAILED with error: %s", activeJob.ID, err.Error()))
+			} else {
+				logger.WriteLog(fmt.Sprintf("Queue: Job ID=%s was CANCELLED", activeJob.ID))
 			}
 		} else {
 			activeJob.Status = domain.StatusSuccess
 			activeJob.Progress = 100.0
+			logger.WriteLog(fmt.Sprintf("Queue: Job ID=%s COMPLETED successfully", activeJob.ID))
 		}
 		dm.removeFromQueue(activeJob.ID)
 		dm.activeJobID = ""
@@ -211,7 +287,6 @@ func (dm *DownloadManager) runJob(job *domain.DownloadJob) error {
 
 	cfg := dm.cfgManager.GetConfig()
 
-	// Broadcaster log utility
 	logFn := func(event domain.LogEvent) {
 		event.JobID = job.ID
 		dm.broadcaster.Emit("steamcmd:log", event)
@@ -236,7 +311,33 @@ func (dm *DownloadManager) runJob(job *domain.DownloadJob) error {
 
 	// 2. Perform the download operation
 	err = dm.runner.DownloadItem(ctx, job.AppID, job.WorkshopID, cfg.Username, "", logFn, progressFn)
-	return err
+	if err != nil {
+		return err
+	}
+
+	// 3. Move the downloaded item from SteamCMD cache to custom OutputDir
+	steamCmdDir := filepath.Dir(cfg.SteamCmdPath)
+	srcDir := filepath.Join(steamCmdDir, "steamapps", "workshop", "content", job.AppID, job.WorkshopID)
+	destDir := filepath.Join(cfg.OutputDir, job.AppID, job.WorkshopID)
+
+	logFn(domain.LogEvent{
+		Message:   fmt.Sprintf("Moving downloaded files from cache to target directory (%s)...", destDir),
+		Timestamp: time.Now(),
+	})
+
+	if _, statErr := os.Stat(srcDir); statErr == nil {
+		if moveErr := moveFiles(srcDir, destDir); moveErr != nil {
+			return fmt.Errorf("failed to move files to destination: %w", moveErr)
+		}
+		logFn(domain.LogEvent{
+			Message:   "Files successfully moved to: " + destDir,
+			Timestamp: time.Now(),
+		})
+	} else {
+		return fmt.Errorf("download reported success, but content folder was not found at expected path: %s", srcDir)
+	}
+
+	return nil
 }
 
 func (dm *DownloadManager) removeFromQueue(jobID string) {
@@ -251,4 +352,46 @@ func (dm *DownloadManager) removeFromQueue(jobID string) {
 
 func (dm *DownloadManager) broadcastJobChange(job *domain.DownloadJob) {
 	dm.broadcaster.Emit("job:status", *job)
+}
+
+func moveFiles(src, dest string) error {
+	if err := os.MkdirAll(dest, 0755); err != nil {
+		return fmt.Errorf("failed to create destination directory: %w", err)
+	}
+
+	files, err := os.ReadDir(src)
+	if err != nil {
+		return fmt.Errorf("failed to read source directory: %w", err)
+	}
+
+	for _, entry := range files {
+		srcPath := filepath.Join(src, entry.Name())
+		destPath := filepath.Join(dest, entry.Name())
+
+		if err := os.Rename(srcPath, destPath); err != nil {
+			if err := copyFile(srcPath, destPath); err != nil {
+				return fmt.Errorf("failed to copy file: %w", err)
+			}
+			_ = os.Remove(srcPath)
+		}
+	}
+	_ = os.Remove(src)
+	return nil
+}
+
+func copyFile(src, dest string) error {
+	in, err := os.Open(src)
+	if err != nil {
+		return err
+	}
+	defer in.Close()
+
+	out, err := os.Create(dest)
+	if err != nil {
+		return err
+	}
+	defer out.Close()
+
+	_, err = io.Copy(out, in)
+	return err
 }

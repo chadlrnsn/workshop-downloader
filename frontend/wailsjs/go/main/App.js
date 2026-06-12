@@ -18,6 +18,10 @@ export function CheckSteamCmd() {
   return window['go']['main']['App']['CheckSteamCmd']();
 }
 
+export function DeleteJob(arg1) {
+  return window['go']['main']['App']['DeleteJob'](arg1);
+}
+
 export function ForceInstallSteamCmd() {
   return window['go']['main']['App']['ForceInstallSteamCmd']();
 }
@@ -32,6 +36,10 @@ export function GetJobs() {
 
 export function LoginSteam(arg1, arg2) {
   return window['go']['main']['App']['LoginSteam'](arg1, arg2);
+}
+
+export function RetryJob(arg1) {
+  return window['go']['main']['App']['RetryJob'](arg1);
 }
 
 export function SaveConfig(arg1) {

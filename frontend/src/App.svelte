@@ -12,7 +12,9 @@
     SaveConfig,
     LoginSteam,
     CheckSteamCmd,
-    ForceInstallSteamCmd
+    ForceInstallSteamCmd,
+    RetryJob,
+    DeleteJob
   } from '../wailsjs/go/main/App';
   import { EventsOn, EventsOff } from '../wailsjs/runtime/runtime';
 
@@ -89,11 +91,16 @@
       steamCode = '';
     });
 
+    EventsOn('job:deleted', (jobId) => {
+      jobs = (jobs || []).filter(j => j.id !== jobId);
+    });
+
     return () => {
       EventsOff('job:status');
       EventsOff('job:progress');
       EventsOff('steamcmd:log');
       EventsOff('steamcmd:auth_required');
+      EventsOff('job:deleted');
     };
   });
 
@@ -184,6 +191,20 @@
 
   async function handleCancel(jobId) {
     await CancelJob(jobId);
+    await fetchJobs();
+  }
+
+  async function handleRetry(jobId) {
+    try {
+      await RetryJob(jobId);
+      await fetchJobs();
+    } catch (err) {
+      alert(`Retry failed: ${err}`);
+    }
+  }
+
+  async function handleDelete(jobId) {
+    await DeleteJob(jobId);
     await fetchJobs();
   }
 
@@ -304,12 +325,21 @@
             <div class="queue-list">
               {#each jobs || [] as job (job.id)}
                 <div class="job-item status-{job.status}">
-                  <div class="job-meta">
-                    <div class="job-ids">
-                      <strong>AppID: {job.appId}</strong>
-                      <span class="text-secondary">Item: {job.workshopId}</span>
+                  <div class="job-card-top">
+                    {#if job.previewUrl}
+                      <img src={job.previewUrl} alt={job.title} class="job-preview-img" />
+                    {/if}
+                    <div class="job-details">
+                      <div class="job-title-row">
+                        <strong class="job-title-text" title={job.title || `Workshop ID: ${job.workshopId}`}>
+                          {job.title || `Workshop ID: ${job.workshopId}`}
+                        </strong>
+                        <span class="job-status-badge">{job.status}</span>
+                      </div>
+                      <div class="job-ids">
+                        <span class="text-secondary">AppID: {job.appId} | ID: {job.workshopId}</span>
+                      </div>
                     </div>
-                    <span class="job-status-badge">{job.status}</span>
                   </div>
 
                   <div class="progress-section">
@@ -326,6 +356,11 @@
                   <div class="job-actions">
                     {#if job.status === 'queued' || job.status === 'running'}
                       <button class="btn-danger-text" on:click={() => handleCancel(job.id)}>Cancel</button>
+                    {:else}
+                      {#if job.status === 'failed'}
+                        <button class="btn-retry-text" on:click={() => handleRetry(job.id)}>🔄 Retry</button>
+                      {/if}
+                      <button class="btn-delete-text" on:click={() => handleDelete(job.id)}>🗑️ Remove</button>
                     {/if}
                   </div>
                 </div>
@@ -1063,6 +1098,76 @@
     letter-spacing: 4px;
     text-align: center;
     box-sizing: border-box;
+  }
+
+  /* job card details and image preview styles */
+  .job-card-top {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    width: 100%;
+  }
+
+  .job-preview-img {
+    width: 50px;
+    height: 50px;
+    object-fit: cover;
+    border-radius: 4px;
+    border: 1px solid #475569;
+    background: #0f172a;
+    flex-shrink: 0;
+  }
+
+  .job-details {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0; /* allows text truncation */
+  }
+
+  .job-title-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+  }
+
+  .job-title-text {
+    font-size: 13px;
+    font-weight: 700;
+    color: #f8fafc;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 280px;
+  }
+
+  .btn-retry-text {
+    background: transparent;
+    color: #10b981;
+    font-size: 12px;
+    padding: 4px 8px;
+    font-weight: 700;
+  }
+
+  .btn-retry-text:hover {
+    background: rgba(16, 185, 129, 0.15);
+    border-radius: 4px;
+  }
+
+  .btn-delete-text {
+    background: transparent;
+    color: #94a3b8;
+    font-size: 12px;
+    padding: 4px 8px;
+  }
+
+  .btn-delete-text:hover {
+    background: rgba(248, 113, 113, 0.1);
+    color: #fca5a5;
+    border-radius: 4px;
   }
 
   @keyframes spin {
