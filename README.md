@@ -4,6 +4,7 @@
 [![Wails Version](https://img.shields.io/badge/Wails-v2.12.0-blue?style=flat)](https://wails.io/)
 [![Svelte Version](https://img.shields.io/badge/Svelte-v5-FF3E00?style=flat&logo=svelte)](https://svelte.dev/)
 [![Platform Support](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux-lightgrey?style=flat)](https://github.com/)
+[![Build](https://github.com/chadlrnsn/workshop-downloader/actions/workflows/deploy.yml/badge.svg)](https://github.com/chadlrnsn/workshop-downloader/actions/workflows/deploy.yml)
 
 [English](#english) | [Русский](#русский)
 
