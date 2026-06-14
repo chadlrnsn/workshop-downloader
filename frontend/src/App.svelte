@@ -341,6 +341,26 @@
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   }
 
+  /* Global Scrollbar styling */
+  :global(*::-webkit-scrollbar) {
+    width: 6px;
+    height: 6px;
+  }
+  :global(*::-webkit-scrollbar-track) {
+    background: transparent;
+  }
+  :global(*::-webkit-scrollbar-thumb) {
+    background: #1f2937;
+    border-radius: 3px;
+  }
+  :global(*::-webkit-scrollbar-thumb:hover) {
+    background: #374151;
+  }
+  :global(*) {
+    scrollbar-width: thin;
+    scrollbar-color: #1f2937 transparent;
+  }
+
   /* Fullpage Layout Core */
   .app-workspace {
     display: flex;
