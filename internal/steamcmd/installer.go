@@ -2,6 +2,7 @@ package steamcmd
 
 import (
 	"archive/zip"
+	"bufio"
 	"context"
 	"fmt"
 	"io"
@@ -9,6 +10,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"sync"
 	"syscall"
 	"time"
 
@@ -78,7 +80,39 @@ func VerifyOrInstall(ctx context.Context, steamCmdPath string, logFn OutputHandl
 		CreationFlags: 0x00000008,
 	}
 
-	if err := cmd.Run(); err != nil {
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		return fmt.Errorf("failed to create stdout pipe: %w", err)
+	}
+	stderr, err := cmd.StderrPipe()
+	if err != nil {
+		return fmt.Errorf("failed to create stderr pipe: %w", err)
+	}
+
+	if err := cmd.Start(); err != nil {
+		return fmt.Errorf("failed to start initial steamcmd self-update: %w", err)
+	}
+
+	var wg sync.WaitGroup
+	wg.Add(2)
+
+	logPipe := func(r io.Reader, isErr bool) {
+		defer wg.Done()
+		scanner := bufio.NewScanner(r)
+		for scanner.Scan() {
+			logFn(domain.LogEvent{
+				Message:   scanner.Text(),
+				Timestamp: time.Now(),
+				IsError:   isErr,
+			})
+		}
+	}
+
+	go logPipe(stdout, false)
+	go logPipe(stderr, true)
+
+	wg.Wait()
+	if err := cmd.Wait(); err != nil {
 		return fmt.Errorf("failed to run initial steamcmd self-update: %w", err)
 	}
 

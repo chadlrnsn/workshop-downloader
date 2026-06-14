@@ -111,55 +111,16 @@ func (r *SteamCmdRunner) RunSteamCmd(
 	var wg sync.WaitGroup
 	wg.Add(2)
 
-	// Stream logs/stderr in background
+	// Stream stderr logs and state machine in background
 	go func() {
 		defer wg.Done()
-		scanner := bufio.NewScanner(stderrPipe)
-		for scanner.Scan() {
-			line := scanner.Text()
-			logHandler(domain.LogEvent{
-				Message:   line,
-				Timestamp: time.Now(),
-				IsError:   true,
-			})
-			if errorRegex.MatchString(line) {
-				recordError(line)
-			}
-		}
+		r.scanPipe(stderrPipe, true, logHandler, progressHandler, progressRegex, steamGuardEmailRegex, steamGuard2FARegex, errorRegex, stdinPipe, recordError)
 	}()
 
-	// Scan stdout and state machine
+	// Scan stdout logs and state machine in background
 	go func() {
 		defer wg.Done()
-		reader := bufio.NewReader(stdoutPipe)
-		var lineBuffer []byte
-
-		for {
-			b, err := reader.ReadByte()
-			if err != nil {
-				if err != io.EOF && len(lineBuffer) > 0 {
-					logLine(string(lineBuffer), logHandler, progressHandler, progressRegex, steamGuardEmailRegex, steamGuard2FARegex, errorRegex, stdinPipe, r.codePrompt, recordError)
-				}
-				break
-			}
-
-			if b == '\n' || b == '\r' {
-				if len(lineBuffer) > 0 {
-					logLine(string(lineBuffer), logHandler, progressHandler, progressRegex, steamGuardEmailRegex, steamGuard2FARegex, errorRegex, stdinPipe, r.codePrompt, recordError)
-					lineBuffer = lineBuffer[:0]
-				}
-				continue
-			}
-
-			lineBuffer = append(lineBuffer, b)
-
-			// Check for interactive prompts which do not emit a trailing newline
-			currentStr := string(lineBuffer)
-			if strings.Contains(currentStr, "Steam Guard code:") || strings.Contains(currentStr, "Two-factor code:") {
-				logLine(currentStr, logHandler, progressHandler, progressRegex, steamGuardEmailRegex, steamGuard2FARegex, errorRegex, stdinPipe, r.codePrompt, recordError)
-				lineBuffer = lineBuffer[:0]
-			}
-		}
+		r.scanPipe(stdoutPipe, false, logHandler, progressHandler, progressRegex, steamGuardEmailRegex, steamGuard2FARegex, errorRegex, stdinPipe, recordError)
 	}()
 
 	// Wait for process to exit or context cancellation
@@ -267,8 +228,52 @@ func enrichErrorLog(line string) string {
 	return line
 }
 
+func (r *SteamCmdRunner) scanPipe(
+	pipe io.Reader,
+	isStderr bool,
+	logHandler OutputHandler,
+	progressHandler ProgressHandler,
+	progressRegex *regexp.Regexp,
+	steamGuardEmailRegex *regexp.Regexp,
+	steamGuard2FARegex *regexp.Regexp,
+	errorRegex *regexp.Regexp,
+	stdin io.Writer,
+	recordError func(string),
+) {
+	reader := bufio.NewReader(pipe)
+	var lineBuffer []byte
+
+	for {
+		b, err := reader.ReadByte()
+		if err != nil {
+			if len(lineBuffer) > 0 {
+				logLine(string(lineBuffer), isStderr, logHandler, progressHandler, progressRegex, steamGuardEmailRegex, steamGuard2FARegex, errorRegex, stdin, r.codePrompt, recordError)
+			}
+			break
+		}
+
+		if b == '\n' || b == '\r' {
+			if len(lineBuffer) > 0 {
+				logLine(string(lineBuffer), isStderr, logHandler, progressHandler, progressRegex, steamGuardEmailRegex, steamGuard2FARegex, errorRegex, stdin, r.codePrompt, recordError)
+				lineBuffer = lineBuffer[:0]
+			}
+			continue
+		}
+
+		lineBuffer = append(lineBuffer, b)
+
+		// Check for interactive prompts which do not emit a trailing newline
+		currentStr := string(lineBuffer)
+		if strings.Contains(currentStr, "Steam Guard code:") || strings.Contains(currentStr, "Two-factor code:") {
+			logLine(currentStr, isStderr, logHandler, progressHandler, progressRegex, steamGuardEmailRegex, steamGuard2FARegex, errorRegex, stdin, r.codePrompt, recordError)
+			lineBuffer = lineBuffer[:0]
+		}
+	}
+}
+
 func logLine(
 	line string,
+	isStderr bool,
 	logHandler OutputHandler,
 	progressHandler ProgressHandler,
 	progressRegex *regexp.Regexp,
@@ -285,6 +290,15 @@ func logLine(
 	}
 
 	isError := errorRegex.MatchString(cleanLine)
+	if !isError && isStderr {
+		// Only treat as error if it doesn't match progress or prompt triggers
+		isProgress := progressRegex != nil && progressRegex.MatchString(cleanLine)
+		isPrompt := steamGuardEmailRegex.MatchString(cleanLine) || steamGuard2FARegex.MatchString(cleanLine)
+		if !isProgress && !isPrompt {
+			isError = true
+		}
+	}
+
 	message := cleanLine
 	if isError {
 		message = enrichErrorLog(cleanLine)
