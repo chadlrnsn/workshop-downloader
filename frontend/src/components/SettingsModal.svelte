@@ -1,6 +1,7 @@
 <script>
   import { createEventDispatcher } from 'svelte';
   import Modal from './common/Modal.svelte';
+  import Checkbox from './common/Checkbox.svelte';
   import { _ } from 'svelte-i18n';
   const dispatch = createEventDispatcher();
 
@@ -123,16 +124,11 @@
         <small class="hint">{$_('settings.password_hint')}</small>
       </div>
 
-      <div class="form-group checkbox-group">
-        <label class="checkbox-container">
-          <input 
-            type="checkbox" 
-            bind:checked={config.rememberPassword} 
-            disabled={isLoggingIn || isResettingAuth} 
-          />
-          <span class="checkbox-label">{$_('settings.remember_password')}</span>
-        </label>
-      </div>
+      <Checkbox 
+        bind:checked={config.rememberPassword} 
+        disabled={isLoggingIn || isResettingAuth} 
+        label={$_('settings.remember_password')} 
+      />
 
       <div class="form-group">
         <label for="steamGuardCode">{$_('settings.steam_guard_code')}</label>
@@ -315,30 +311,6 @@
   .btn-reset-auth:hover:not(:disabled) {
     background: #ef4444;
     color: #ffffff;
-  }
-
-  .checkbox-group {
-    flex-direction: row !important;
-    align-items: center;
-    margin-bottom: 14px;
-  }
-  .checkbox-container {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    cursor: pointer;
-    user-select: none;
-  }
-  .checkbox-container input[type="checkbox"] {
-    width: 16px;
-    height: 16px;
-    accent-color: #3b82f6;
-    cursor: pointer;
-  }
-  .checkbox-label {
-    font-size: 13px;
-    color: #cbd5e1;
-    font-weight: 500;
   }
 
   .btn-auth {
