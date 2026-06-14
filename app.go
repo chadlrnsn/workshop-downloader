@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"regexp"
 	goRuntime "runtime"
+	"strings"
 	"sync"
 	"time"
 
@@ -338,6 +339,42 @@ func (a *App) LoginSteam(username, password string) error {
 	}
 
 	logger.WriteLog("Wails Bindings: SteamCMD login connection successful.")
+	return nil
+}
+
+// ResetSteamAuth wipes SteamCMD credentials, cached login data, and resets config to anonymous
+func (a *App) ResetSteamAuth() error {
+	logger.WriteLog("Wails Bindings: ResetSteamAuth called")
+	cfg := a.cfgManager.GetConfig()
+	cfg.Username = "anonymous"
+	if err := a.cfgManager.UpdateConfig(cfg); err != nil {
+		logger.WriteError(err, "ResetSteamAuth: UpdateConfig")
+		return fmt.Errorf("failed to reset username config: %w", err)
+	}
+
+	steamCmdDir := filepath.Dir(cfg.SteamCmdPath)
+	if _, err := os.Stat(steamCmdDir); err == nil {
+		// 1. Remove config folder
+		configPath := filepath.Join(steamCmdDir, "config")
+		if err := os.RemoveAll(configPath); err != nil {
+			logger.WriteError(err, "ResetSteamAuth: RemoveAll config directory")
+		}
+
+		// 2. Remove ssfn files in steamcmd folder
+		files, err := os.ReadDir(steamCmdDir)
+		if err == nil {
+			for _, file := range files {
+				if !file.IsDir() && strings.HasPrefix(strings.ToLower(file.Name()), "ssfn") {
+					fullPath := filepath.Join(steamCmdDir, file.Name())
+					if err := os.Remove(fullPath); err != nil {
+						logger.WriteError(err, fmt.Sprintf("ResetSteamAuth: remove ssfn file %s", file.Name()))
+					}
+				}
+			}
+		}
+	}
+
+	logger.WriteLog("Wails Bindings: SteamCMD authentication reset successfully.")
 	return nil
 }
 

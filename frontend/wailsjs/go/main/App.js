@@ -50,6 +50,10 @@ export function OpenFolder(arg1, arg2) {
   return window['go']['main']['App']['OpenFolder'](arg1, arg2);
 }
 
+export function ResetSteamAuth() {
+  return window['go']['main']['App']['ResetSteamAuth']();
+}
+
 export function RetryJob(arg1) {
   return window['go']['main']['App']['RetryJob'](arg1);
 }

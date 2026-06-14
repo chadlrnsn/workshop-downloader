@@ -16,7 +16,8 @@
     ForceInstallSteamCmd,
     RetryJob,
     DeleteJob,
-    OpenFolder
+    OpenFolder,
+    ResetSteamAuth
   } from '../wailsjs/go/main/App';
   import { EventsOn, EventsOff } from '../wailsjs/runtime/runtime';
 
@@ -41,6 +42,7 @@
   let steamPassword = '';
   let isSavingSettings = false;
   let isLoggingIn = false;
+  let isResettingAuth = false;
   let loginStatusMsg = '';
   let isCheckingSteamCmd = false;
 
@@ -150,6 +152,22 @@
     } finally {
       isLoggingIn = false;
       await reloadConfig();
+    }
+  }
+
+  async function handleResetAuth() {
+    const confirmClear = confirm($_('alerts.confirm_reset_auth'));
+    if (!confirmClear) return;
+
+    isResettingAuth = true;
+    try {
+      await ResetSteamAuth();
+      alert($_('alerts.reset_auth_success'));
+      await reloadConfig();
+    } catch (err) {
+      alert($_('alerts.reset_auth_failed', { values: { error: err } }));
+    } finally {
+      isResettingAuth = false;
     }
   }
 
@@ -281,11 +299,13 @@
       bind:steamPassword 
       {isSavingSettings}
       {isLoggingIn}
+      {isResettingAuth}
       {isCheckingSteamCmd}
       {loginStatusMsg}
       on:save={updateConfig}
       on:check={handleVerifySteamCmd}
       on:login={triggerSteamLogin}
+      on:resetAuth={handleResetAuth}
       on:close={() => { showConfigModal = false; steamPassword = ''; }}
     />
   {/if}

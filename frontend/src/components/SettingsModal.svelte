@@ -8,6 +8,7 @@
   export let steamPassword = '';
   export let isSavingSettings = false;
   export let isLoggingIn = false;
+  export let isResettingAuth = false;
   export let isCheckingSteamCmd = false;
   export let loginStatusMsg = '';
 
@@ -21,6 +22,10 @@
 
   function handleLogin() {
     dispatch('login');
+  }
+
+  function handleResetAuth() {
+    dispatch('resetAuth');
   }
 
   function handleCancel() {
@@ -69,6 +74,29 @@
       {$_('settings.auth_description')}
     </p>
 
+    <div class="auth-status-card" class:authorized={config.username !== 'anonymous'}>
+      <div class="auth-status-info">
+        <span class="status-dot" class:active={config.username !== 'anonymous'}></span>
+        <span class="status-text">
+          {#if config.username !== 'anonymous'}
+            {$_('settings.status_authorized', { values: { username: config.username } })}
+          {:else}
+            {$_('settings.status_anonymous')}
+          {/if}
+        </span>
+      </div>
+      {#if config.username !== 'anonymous'}
+        <button 
+          class="btn-reset-auth" 
+          type="button" 
+          on:click={handleResetAuth} 
+          disabled={isLoggingIn || isResettingAuth}
+        >
+          🗑️ {isResettingAuth ? $_('settings.resetting') : $_('settings.reset_auth')}
+        </button>
+      {/if}
+    </div>
+
     <div class="form-group">
       <label for="username">{$_('settings.username')}</label>
       <input 
@@ -76,7 +104,7 @@
         type="text" 
         bind:value={config.username} 
         placeholder="anonymous" 
-        disabled={isLoggingIn} 
+        disabled={isLoggingIn || isResettingAuth} 
       />
       <small class="hint">{$_('settings.username_hint')}</small>
     </div>
@@ -89,7 +117,7 @@
           type="password" 
           bind:value={steamPassword} 
           placeholder="••••••••" 
-          disabled={isLoggingIn} 
+          disabled={isLoggingIn || isResettingAuth} 
         />
         <small class="hint">{$_('settings.password_hint')}</small>
       </div>
@@ -101,7 +129,7 @@
         <p class="spinner-msg">{loginStatusMsg}</p>
       </div>
     {:else if config.username !== 'anonymous'}
-      <button class="btn-auth btn-block" on:click={handleLogin}>
+      <button class="btn-auth btn-block" on:click={handleLogin} disabled={isResettingAuth}>
         🚀 {$_('settings.authenticate')}
       </button>
     {/if}
@@ -212,6 +240,57 @@
 
   .btn-check:hover:not(:disabled) {
     background: #475569;
+  }
+
+  .auth-status-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #0f172a;
+    border: 1px solid #1e293b;
+    padding: 10px 14px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    gap: 12px;
+  }
+  .auth-status-card.authorized {
+    border-color: rgba(16, 185, 129, 0.3);
+    background: rgba(16, 185, 129, 0.03);
+  }
+  .auth-status-info {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    background: #64748b;
+    border-radius: 50%;
+  }
+  .status-dot.active {
+    background: #10b981;
+    box-shadow: 0 0 8px #10b981;
+  }
+  .status-text {
+    font-size: 13px;
+    color: #e2e8f0;
+    font-weight: 500;
+  }
+  .btn-reset-auth {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    font-size: 11px;
+    padding: 6px 10px;
+    height: auto;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+  }
+  .btn-reset-auth:hover:not(:disabled) {
+    background: #ef4444;
+    color: #ffffff;
   }
 
   .btn-auth {
