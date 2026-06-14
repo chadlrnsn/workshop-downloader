@@ -22,7 +22,7 @@ export function GetHistory():Promise<Array<domain.HistoryItem>>;
 
 export function GetJobs():Promise<Array<domain.DownloadJob>>;
 
-export function LoginSteam(arg1:string,arg2:string):Promise<void>;
+export function LoginSteam(arg1:string,arg2:string,arg3:string):Promise<void>;
 
 export function OpenFolder(arg1:string,arg2:string):Promise<void>;
 

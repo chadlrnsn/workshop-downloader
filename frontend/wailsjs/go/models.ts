@@ -5,6 +5,8 @@ export namespace domain {
 	    outputDir: string;
 	    autoUpdate: boolean;
 	    username: string;
+	    rememberPassword: boolean;
+	    password: string;
 	
 	    static createFrom(source: any = {}) {
 	        return new AppConfig(source);
@@ -16,6 +18,8 @@ export namespace domain {
 	        this.outputDir = source["outputDir"];
 	        this.autoUpdate = source["autoUpdate"];
 	        this.username = source["username"];
+	        this.rememberPassword = source["rememberPassword"];
+	        this.password = source["password"];
 	    }
 	}
 	export class DownloadJob {

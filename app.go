@@ -310,8 +310,8 @@ func (a *App) CancelSteamCodePrompt() error {
 }
 
 // LoginSteam executes direct SteamCMD login to authenticate account and resolve 2FA
-func (a *App) LoginSteam(username, password string) error {
-	logger.WriteLog(fmt.Sprintf("Wails Bindings: LoginSteam called for Username=%s", username))
+func (a *App) LoginSteam(username, password, steamGuardCode string) error {
+	logger.WriteLog(fmt.Sprintf("Wails Bindings: LoginSteam called for Username=%s, hasGuardCode=%t", username, steamGuardCode != ""))
 	cfg := a.cfgManager.GetConfig()
 	cfg.Username = username
 	if err := a.cfgManager.UpdateConfig(cfg); err != nil {
@@ -332,7 +332,7 @@ func (a *App) LoginSteam(username, password string) error {
 	ctx, cancel := context.WithTimeout(a.ctx, 5*time.Minute)
 	defer cancel()
 
-	err := a.cmdRunner.Login(ctx, username, password, logFn)
+	err := a.cmdRunner.Login(ctx, username, password, steamGuardCode, logFn)
 	if err != nil {
 		logger.WriteError(err, "LoginSteam: cmdRunner.Login")
 		return fmt.Errorf("steamcmd login failed: %w", err)

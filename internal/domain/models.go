@@ -50,10 +50,12 @@ type HistoryItem struct {
 }
 
 type AppConfig struct {
-	SteamCmdPath string `json:"steamCmdPath"`
-	OutputDir    string `json:"outputDir"`
-	AutoUpdate   bool   `json:"autoUpdate"`
-	Username     string `json:"username"`
+	SteamCmdPath     string `json:"steamCmdPath"`
+	OutputDir        string `json:"outputDir"`
+	AutoUpdate       bool   `json:"autoUpdate"`
+	Username         string `json:"username"`
+	RememberPassword bool   `json:"rememberPassword"`
+	Password         string `json:"password"`
 }
 
 type LogEvent struct {

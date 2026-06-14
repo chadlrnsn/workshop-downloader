@@ -323,7 +323,7 @@ func (dm *DownloadManager) runJob(job *domain.DownloadJob) error {
 	}
 
 	// 2. Perform the download operation
-	err = dm.runner.DownloadItem(ctx, job.AppID, job.WorkshopID, cfg.Username, "", logFn, progressFn)
+	err = dm.runner.DownloadItem(ctx, job.AppID, job.WorkshopID, cfg.Username, cfg.Password, logFn, progressFn)
 	if err != nil {
 		return err
 	}

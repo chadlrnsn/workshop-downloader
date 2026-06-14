@@ -211,7 +211,7 @@ func (r *SteamCmdRunner) DownloadItem(
 	logHandler OutputHandler,
 	progressHandler ProgressHandler,
 ) error {
-	args := []string{}
+	args := []string{"@NoPromptForPassword", "1"}
 	if username != "" && username != "anonymous" {
 		args = append(args, "+login", username)
 		if password != "" {
@@ -230,13 +230,17 @@ func (r *SteamCmdRunner) Login(
 	ctx context.Context,
 	username string,
 	password string,
+	steamGuardCode string,
 	logHandler OutputHandler,
 ) error {
-	args := []string{}
+	args := []string{"@NoPromptForPassword", "1"}
 	if username != "" && username != "anonymous" {
 		args = append(args, "+login", username)
 		if password != "" {
 			args = append(args, password)
+		}
+		if steamGuardCode != "" {
+			args = append(args, steamGuardCode)
 		}
 	} else {
 		args = append(args, "+login", "anonymous")

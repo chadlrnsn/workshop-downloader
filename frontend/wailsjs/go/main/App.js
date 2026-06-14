@@ -42,8 +42,8 @@ export function GetJobs() {
   return window['go']['main']['App']['GetJobs']();
 }
 
-export function LoginSteam(arg1, arg2) {
-  return window['go']['main']['App']['LoginSteam'](arg1, arg2);
+export function LoginSteam(arg1, arg2, arg3) {
+  return window['go']['main']['App']['LoginSteam'](arg1, arg2, arg3);
 }
 
 export function OpenFolder(arg1, arg2) {

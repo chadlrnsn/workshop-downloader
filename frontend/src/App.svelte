@@ -33,13 +33,14 @@
   import AuthCodeModal from './components/AuthCodeModal.svelte';
 
   // Component State
-  let config = { steamCmdPath: '', outputDir: '', autoUpdate: true, username: 'anonymous' };
+  let config = { steamCmdPath: '', outputDir: '', autoUpdate: true, username: 'anonymous', rememberPassword: false, password: '' };
   let jobs = [];
   
   // Settings & History Modal State
   let showConfigModal = false;
   let showHistoryModal = false;
   let steamPassword = '';
+  let steamGuardCode = '';
   let isSavingSettings = false;
   let isLoggingIn = false;
   let isResettingAuth = false;
@@ -120,11 +121,21 @@
 
   async function reloadConfig() {
     config = await GetConfig();
+    if (config.rememberPassword) {
+      steamPassword = config.password || '';
+    } else {
+      steamPassword = '';
+    }
   }
 
   async function updateConfig() {
     isSavingSettings = true;
     try {
+      if (config.rememberPassword) {
+        config.password = steamPassword;
+      } else {
+        config.password = '';
+      }
       await SaveConfig(config);
       showConfigModal = false;
     } catch (err) {
@@ -142,9 +153,18 @@
     isLoggingIn = true;
     loginStatusMsg = $_('status.login_init');
     try {
-      await LoginSteam(config.username, steamPassword);
+      if (config.rememberPassword) {
+        config.password = steamPassword;
+      } else {
+        config.password = '';
+      }
+      await SaveConfig(config);
+      await LoginSteam(config.username, steamPassword, steamGuardCode);
       loginStatusMsg = '';
-      steamPassword = '';
+      steamGuardCode = '';
+      if (!config.rememberPassword) {
+        steamPassword = '';
+      }
       alert($_('alerts.auth_success'));
     } catch (err) {
       loginStatusMsg = '';
@@ -263,7 +283,7 @@
 <main class="app-workspace">
   <!-- Top Bar Custom Component -->
   <Header 
-    on:toggleSettings={() => showConfigModal = true} 
+    on:toggleSettings={() => { showConfigModal = true; reloadConfig(); }} 
     on:toggleHistory={() => showHistoryModal = true} 
   />
 
@@ -297,6 +317,7 @@
     <SettingsModal 
       bind:config 
       bind:steamPassword 
+      bind:steamGuardCode
       {isSavingSettings}
       {isLoggingIn}
       {isResettingAuth}
@@ -306,7 +327,7 @@
       on:check={handleVerifySteamCmd}
       on:login={triggerSteamLogin}
       on:resetAuth={handleResetAuth}
-      on:close={() => { showConfigModal = false; steamPassword = ''; }}
+      on:close={() => { showConfigModal = false; steamPassword = ''; steamGuardCode = ''; }}
     />
   {/if}
 
