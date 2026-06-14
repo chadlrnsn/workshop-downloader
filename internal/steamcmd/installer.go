@@ -11,7 +11,6 @@ import (
 	"os/exec"
 	"path/filepath"
 	"sync"
-	"syscall"
 	"time"
 
 	"workshop-downloader/internal/domain"
@@ -80,10 +79,7 @@ func VerifyOrInstall(ctx context.Context, steamCmdPath string, logFn OutputHandl
 
 	// 4. Run steamcmd once with +quit to force built-in update
 	cmd := exec.CommandContext(ctx, steamCmdPath, "+quit")
-	cmd.SysProcAttr = &syscall.SysProcAttr{
-		HideWindow:    true,
-		CreationFlags: 0x00000008,
-	}
+	setSysProcAttr(cmd)
 
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {

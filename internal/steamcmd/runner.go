@@ -11,7 +11,6 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-	"syscall"
 	"time"
 
 	"workshop-downloader/internal/domain"
@@ -65,10 +64,7 @@ func (r *SteamCmdRunner) RunSteamCmd(
 	cmd := exec.CommandContext(ctx, cmdPath, args...)
 	
 	// Crucial for Windows: hide console window
-	cmd.SysProcAttr = &syscall.SysProcAttr{
-		HideWindow:    true,
-		CreationFlags: 0x00000008, // DETACHED_PROCESS or CREATE_NO_WINDOW
-	}
+	setSysProcAttr(cmd)
 
 	stdinPipe, err := cmd.StdinPipe()
 	if err != nil {
