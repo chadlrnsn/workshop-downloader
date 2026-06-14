@@ -7,7 +7,7 @@
 
 [English](#english) | [Русский](#русский)
 
----
+![img](https://i.imgur.com/CHYqPgO.png)
 
 ## English
 
