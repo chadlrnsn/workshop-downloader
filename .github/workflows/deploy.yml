@@ -1,0 +1,109 @@
+name: Build & Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build (${{ matrix.platform }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            platform: linux/amd64
+            binary_path: build/bin/workshop-downloader
+            output_name: workshop-downloader
+          - os: windows-latest
+            platform: windows/amd64
+            binary_path: build/bin/workshop-downloader.exe
+            output_name: workshop-downloader.exe
+            build_args: "-nsis"
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Install System Dependencies (Linux)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: frontend/package.json
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23.4'
+          cache: true
+
+      - name: Install Wails CLI
+        run: go install github.com/wailsapp/wails/v2/cmd/wails@latest
+
+      - name: Build Application
+        run: |
+          wails build -platform ${{ matrix.platform }} ${{ matrix.build_args }}
+
+      - name: Rename Binaries (with Version)
+        shell: bash
+        run: |
+          tag_name="${{ github.ref_name }}"
+          # Fallback if manual dispatch
+          if [ -z "$tag_name" ] || [ "${{ github.ref_type }}" != "tag" ]; then
+            tag_name="latest"
+          fi
+          
+          mkdir -p dist/
+          
+          # Handle the compiled binary
+          if [ "${{ matrix.os }}" = "windows-latest" ]; then
+            cp "${{ matrix.binary_path }}" "dist/workshop-downloader-${tag_name}-windows-amd64.exe"
+            # Also handle the NSIS installer if generated
+            if [ -f "build/bin/workshop-downloader-amd64-installer.exe" ]; then
+              cp "build/bin/workshop-downloader-amd64-installer.exe" "dist/workshop-downloader-${tag_name}-windows-amd64-installer.exe"
+            fi
+          else
+            cp "${{ matrix.binary_path }}" "dist/workshop-downloader-${tag_name}-linux-amd64"
+          fi
+
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.output_name }}-${{ github.sha }}
+          path: dist/
+          retention-days: 5
+
+  release:
+    name: Create GitHub Release
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Download All Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist/
+          merge-multiple: true
+
+      - name: Create GitHub Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "${{ github.ref_name }}" \
+            --title "Release ${{ github.ref_name }}" \
+            --generate-notes \
+            dist/*
