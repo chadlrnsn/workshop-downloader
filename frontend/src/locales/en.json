@@ -18,7 +18,9 @@
   "stats": {
     "total": "Total Tasks",
     "active": "Active",
-    "success": "Success"
+    "success": "Success",
+    "failed": "Failed",
+    "queued": "Queued"
   },
   "session": {
     "title": "Session Account",
