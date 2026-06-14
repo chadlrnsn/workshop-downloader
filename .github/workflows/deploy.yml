@@ -18,6 +18,7 @@ jobs:
             platform: linux/amd64
             binary_path: build/bin/workshop-downloader
             output_name: workshop-downloader
+            build_args: "-tags webkit2_41"
           - os: windows-latest
             platform: windows/amd64
             binary_path: build/bin/workshop-downloader.exe
@@ -32,7 +33,7 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         run: |
           sudo apt-get update
-          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev
+          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
