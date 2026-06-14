@@ -2,6 +2,7 @@
   import { createEventDispatcher } from 'svelte';
   import Modal from './common/Modal.svelte';
   import Checkbox from './common/Checkbox.svelte';
+  import Input from './common/Input.svelte';
   import { _ } from 'svelte-i18n';
   const dispatch = createEventDispatcher();
 
@@ -42,7 +43,7 @@
     <div class="form-group">
       <label for="steamPath">{$_('settings.steam_path')}</label>
       <div class="input-with-button">
-        <input 
+        <Input 
           id="steamPath" 
           type="text" 
           bind:value={config.steamCmdPath} 
@@ -62,13 +63,26 @@
     
     <div class="form-group">
       <label for="outDir">{$_('settings.downloads_directory')}</label>
-      <input 
+      <Input 
         id="outDir" 
         type="text" 
         bind:value={config.outputDir} 
         placeholder={$_('settings.downloads_directory_placeholder')} 
         disabled={isLoggingIn}
       />
+    </div>
+
+    <div class="form-group">
+      <label for="maxConcurrency">{$_('settings.max_concurrency')}</label>
+      <Input 
+        id="maxConcurrency" 
+        type="number" 
+        min="1" 
+        max="5"
+        bind:value={config.maxConcurrency} 
+        disabled={isLoggingIn}
+      />
+      <small class="hint">{$_('settings.max_concurrency_hint')}</small>
     </div>
 
     <div class="modal-section-title">🔑 {$_('settings.section_auth')}</div>
@@ -101,7 +115,7 @@
 
     <div class="form-group">
       <label for="username">{$_('settings.username')}</label>
-      <input 
+      <Input 
         id="username" 
         type="text" 
         bind:value={config.username} 
@@ -114,7 +128,7 @@
     {#if config.username !== 'anonymous'}
       <div class="form-group">
         <label for="password">{$_('settings.password')}</label>
-        <input 
+        <Input 
           id="password" 
           type="password" 
           bind:value={steamPassword} 
@@ -132,7 +146,7 @@
 
       <div class="form-group">
         <label for="steamGuardCode">{$_('settings.steam_guard_code')}</label>
-        <input 
+        <Input 
           id="steamGuardCode" 
           type="text" 
           bind:value={steamGuardCode} 
@@ -184,29 +198,6 @@
     font-size: 12px;
     color: #94a3b8;
     margin-bottom: 2px;
-  }
-
-  input[type="text"], input[type="password"] {
-    background: #0f172a;
-    border: 1px solid #334155;
-    border-radius: 6px;
-    padding: 10px 12px;
-    color: #f8fafc;
-    font-size: 14px;
-    width: 100%;
-    box-sizing: border-box;
-    transition: all 0.2s;
-  }
-
-  input[type="text"]:focus, input[type="password"]:focus {
-    outline: none;
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
-  }
-
-  input:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
   }
 
   button {

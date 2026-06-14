@@ -60,6 +60,8 @@
     "checking": "Checking...",
     "downloads_directory": "Downloads Directory",
     "downloads_directory_placeholder": "C:\\Downloads",
+    "max_concurrency": "Max Concurrent Downloads",
+    "max_concurrency_hint": "Number of simultaneous active downloads (1 - 5).",
     "section_auth": "Steam Authentication",
     "auth_description": "Logging in caches a persistence token (Sentry) locally inside your SteamCMD environment. Once authenticated, future downloads using this account will not prompt for a password.",
     "username": "Steam Account Username",

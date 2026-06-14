@@ -19,8 +19,13 @@ import (
 
 const steamCmdZipURL = "https://steamcdn-a.akamaihd.net/client/installer/steamcmd.zip"
 
+var installMu sync.Mutex
+
 // VerifyOrInstall checks if steamcmd.exe exists at steamCmdPath; if not, downloads and extracts it.
 func VerifyOrInstall(ctx context.Context, steamCmdPath string, logFn OutputHandler) error {
+	installMu.Lock()
+	defer installMu.Unlock()
+
 	dir := filepath.Dir(steamCmdPath)
 	
 	// 1. Check if steamcmd.exe already exists

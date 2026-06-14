@@ -27,10 +27,11 @@ func NewConfigManager() *ConfigManager {
 	cm := &ConfigManager{
 		configPath: configPath,
 		config: domain.AppConfig{
-			SteamCmdPath: filepath.Join(appDir, "steamcmd", "steamcmd.exe"),
-			OutputDir:    filepath.Join(home, "Downloads", "SteamWorkshop"),
-			AutoUpdate:   true,
-			Username:     "anonymous",
+			SteamCmdPath:   filepath.Join(appDir, "steamcmd", "steamcmd.exe"),
+			OutputDir:      filepath.Join(home, "Downloads", "SteamWorkshop"),
+			AutoUpdate:     true,
+			Username:       "anonymous",
+			MaxConcurrency: 2,
 		},
 	}
 	_ = cm.Load()
@@ -60,7 +61,13 @@ func (cm *ConfigManager) Load() error {
 		return nil
 	}
 
-	return json.Unmarshal(data, &cm.config)
+	err = json.Unmarshal(data, &cm.config)
+	if err == nil {
+		if cm.config.MaxConcurrency <= 0 {
+			cm.config.MaxConcurrency = 2
+		}
+	}
+	return err
 }
 
 func (cm *ConfigManager) Save() error {

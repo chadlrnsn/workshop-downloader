@@ -60,6 +60,8 @@
     "checking": "Проверка...",
     "downloads_directory": "Папка для скачивания",
     "downloads_directory_placeholder": "C:\\Downloads",
+    "max_concurrency": "Макс. параллельных загрузок",
+    "max_concurrency_hint": "Количество одновременно активных загрузок (1 - 5).",
     "section_auth": "Авторизация Steam",
     "auth_description": "При авторизации токен входа (Sentry) сохраняется локально в вашей среде SteamCMD. В дальнейшем для скачивания под этой учетной записью пароль не потребуется.",
     "username": "Имя пользователя Steam",

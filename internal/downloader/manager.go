@@ -20,18 +20,17 @@ type EventBroadcaster interface {
 }
 
 type DownloadManager struct {
-	mu           sync.RWMutex
-	jobs         map[string]*domain.DownloadJob
-	queue        []string // Job IDs in queue
-	activeJobID  string
-	runner       *steamcmd.SteamCmdRunner
-	cfgManager   *config.ConfigManager
-	historyMgr   *config.HistoryManager
-	broadcaster  EventBroadcaster
-	cancelActive context.CancelFunc
-	running      bool
-	workerCtx    context.Context
-	workerCancel context.CancelFunc
+	mu            sync.RWMutex
+	jobs          map[string]*domain.DownloadJob
+	queue         []string // Job IDs in queue
+	activeCancels map[string]context.CancelFunc
+	runner        *steamcmd.SteamCmdRunner
+	cfgManager    *config.ConfigManager
+	historyMgr    *config.HistoryManager
+	broadcaster   EventBroadcaster
+	running       bool
+	workerCtx     context.Context
+	workerCancel  context.CancelFunc
 }
 
 func NewDownloadManager(
@@ -42,14 +41,15 @@ func NewDownloadManager(
 ) *DownloadManager {
 	ctx, cancel := context.WithCancel(context.Background())
 	dm := &DownloadManager{
-		jobs:         make(map[string]*domain.DownloadJob),
-		queue:        []string{},
-		runner:       runner,
-		cfgManager:   cfgManager,
-		historyMgr:   historyMgr,
-		broadcaster:  broadcaster,
-		workerCtx:    ctx,
-		workerCancel: cancel,
+		jobs:          make(map[string]*domain.DownloadJob),
+		queue:         []string{},
+		activeCancels: make(map[string]context.CancelFunc),
+		runner:        runner,
+		cfgManager:    cfgManager,
+		historyMgr:    historyMgr,
+		broadcaster:   broadcaster,
+		workerCtx:     ctx,
+		workerCancel:  cancel,
 	}
 
 	return dm
@@ -62,9 +62,17 @@ func (dm *DownloadManager) Start() {
 		return
 	}
 	dm.running = true
+	
+	// Dynamically read maxConcurrency from settings (default: 2)
+	concurrency := dm.cfgManager.GetConfig().MaxConcurrency
+	if concurrency <= 0 {
+		concurrency = 2
+	}
 	dm.mu.Unlock()
 
-	go dm.processQueue()
+	for i := 0; i < concurrency; i++ {
+		go dm.processQueue()
+	}
 }
 
 func (dm *DownloadManager) Stop() {
@@ -74,8 +82,10 @@ func (dm *DownloadManager) Stop() {
 		return
 	}
 	dm.workerCancel()
-	if dm.cancelActive != nil {
-		dm.cancelActive()
+	for _, cancel := range dm.activeCancels {
+		if cancel != nil {
+			cancel()
+		}
 	}
 	dm.running = false
 }
@@ -143,8 +153,8 @@ func (dm *DownloadManager) CancelJob(jobID string) {
 
 	logger.WriteLog(fmt.Sprintf("Queue: Job cancellation requested ID=%s, CurrentStatus=%s", jobID, job.Status))
 	if job.Status == domain.StatusRunning {
-		if dm.cancelActive != nil {
-			dm.cancelActive()
+		if cancel, ok := dm.activeCancels[jobID]; ok && cancel != nil {
+			cancel()
 		}
 	} else if job.Status == domain.StatusQueued {
 		job.Status = domain.StatusCancelled
@@ -207,8 +217,8 @@ func (dm *DownloadManager) DeleteJob(jobID string) {
 	logger.WriteLog(fmt.Sprintf("Queue: Deleting job ID=%s", jobID))
 
 	if job.Status == domain.StatusRunning {
-		if dm.cancelActive != nil {
-			dm.cancelActive()
+		if cancel, ok := dm.activeCancels[jobID]; ok && cancel != nil {
+			cancel()
 		}
 	}
 
@@ -241,7 +251,6 @@ func (dm *DownloadManager) processQueue() {
 			if nextJobIdx != -1 {
 				id := dm.queue[nextJobIdx]
 				activeJob = dm.jobs[id]
-				dm.activeJobID = id
 				activeJob.Status = domain.StatusRunning
 				now := time.Now()
 				activeJob.StartedAt = &now
@@ -285,7 +294,6 @@ func (dm *DownloadManager) processQueue() {
 			}
 		}
 		dm.removeFromQueue(activeJob.ID)
-		dm.activeJobID = ""
 		dm.broadcastJobChange(activeJob)
 		dm.mu.Unlock()
 	}
@@ -294,9 +302,15 @@ func (dm *DownloadManager) processQueue() {
 func (dm *DownloadManager) runJob(job *domain.DownloadJob) error {
 	ctx, cancel := context.WithCancel(dm.workerCtx)
 	dm.mu.Lock()
-	dm.cancelActive = cancel
+	dm.activeCancels[job.ID] = cancel
 	dm.mu.Unlock()
-	defer cancel()
+	
+	defer func() {
+		dm.mu.Lock()
+		delete(dm.activeCancels, job.ID)
+		dm.mu.Unlock()
+		cancel()
+	}()
 
 	cfg := dm.cfgManager.GetConfig()
 

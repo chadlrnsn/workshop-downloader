@@ -1,6 +1,7 @@
 <script>
   import { createEventDispatcher } from 'svelte';
   import Modal from './common/Modal.svelte';
+  import Input from './common/Input.svelte';
   import { _ } from 'svelte-i18n';
   const dispatch = createEventDispatcher();
 
@@ -22,7 +23,7 @@
       {$_('auth.prompt', { values: { type: authPromptType === 'email' ? $_('auth.email') : $_('auth.2fa') } })}
     </p>
     <!-- svelte-ignore a11y_autofocus -->
-    <input 
+    <Input 
       type="text" 
       bind:value={steamCode} 
       placeholder={$_('auth.placeholder')} 
@@ -84,17 +85,17 @@
     color: #cbd5e1;
   }
 
-  .input-code {
+  :global(.modal-body .input-code) {
     background: #0f172a;
-    border: 2px solid #3b82f6;
+    border: 2px solid #3b82f6 !important;
     border-radius: 6px;
     padding: 10px;
     width: 100%;
     color: #fff;
-    font-size: 20px;
-    font-weight: 700;
-    letter-spacing: 4px;
-    text-align: center;
+    font-size: 20px !important;
+    font-weight: 700 !important;
+    letter-spacing: 4px !important;
+    text-align: center !important;
     box-sizing: border-box;
   }
 

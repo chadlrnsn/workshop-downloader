@@ -7,6 +7,7 @@ export namespace domain {
 	    username: string;
 	    rememberPassword: boolean;
 	    password: string;
+	    maxConcurrency: number;
 	
 	    static createFrom(source: any = {}) {
 	        return new AppConfig(source);
@@ -20,6 +21,7 @@ export namespace domain {
 	        this.username = source["username"];
 	        this.rememberPassword = source["rememberPassword"];
 	        this.password = source["password"];
+	        this.maxConcurrency = source["maxConcurrency"];
 	    }
 	}
 	export class DownloadJob {

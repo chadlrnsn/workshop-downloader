@@ -56,6 +56,7 @@ type AppConfig struct {
 	Username         string `json:"username"`
 	RememberPassword bool   `json:"rememberPassword"`
 	Password         string `json:"password"`
+	MaxConcurrency   int    `json:"maxConcurrency"`
 }
 
 type LogEvent struct {
