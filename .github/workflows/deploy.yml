@@ -5,6 +5,11 @@ on:
     tags:
       - 'v*'
   workflow_dispatch:
+    inputs:
+      tag_name:
+        description: 'Tag name for the release (e.g., v0.1.0)'
+        required: false
+        type: string
 
 jobs:
   build:
@@ -58,9 +63,9 @@ jobs:
       - name: Rename Binaries (with Version)
         shell: bash
         run: |
-          tag_name="${{ github.ref_name }}"
-          # Fallback if manual dispatch
-          if [ -z "$tag_name" ] || [ "${{ github.ref_type }}" != "tag" ]; then
+          tag_name="${{ github.event.inputs.tag_name || github.ref_name }}"
+          # Fallback if manual dispatch without input
+          if [ -z "${{ github.event.inputs.tag_name }}" ] && [ "${{ github.ref_type }}" != "tag" ]; then
             tag_name="latest"
           fi
           
@@ -88,7 +93,7 @@ jobs:
     name: Create GitHub Release
     needs: build
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: startsWith(github.ref, 'refs/tags/v') || (github.event_name == 'workflow_dispatch' && github.event.inputs.tag_name != '')
     permissions:
       contents: write
 
@@ -106,7 +111,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create "${{ github.ref_name }}" \
-            --title "Release ${{ github.ref_name }}" \
+          tag_name="${{ github.event.inputs.tag_name || github.ref_name }}"
+          gh release create "$tag_name" \
+            --title "Release $tag_name" \
             --generate-notes \
             dist/*
