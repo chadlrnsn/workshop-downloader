@@ -21,6 +21,7 @@
     <p>
       {$_('auth.prompt', { values: { type: authPromptType === 'email' ? $_('auth.email') : $_('auth.2fa') } })}
     </p>
+    <!-- svelte-ignore a11y_autofocus -->
     <input 
       type="text" 
       bind:value={steamCode} 
